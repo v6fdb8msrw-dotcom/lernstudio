@@ -33,18 +33,61 @@ if ! git --version >/dev/null 2>&1; then
   fail "Git fehlt noch. macOS zeigt gleich „Entwicklerwerkzeuge installieren“ – bestätigen, warten (ein paar Minuten), dann diesen Befehl nochmal ausführen."
 fi
 
-# 2. Zugang prüfen, sonst Schlüssel abfragen und im Schlüsselbund speichern
+# 2. Zugang prüfen, sonst Schlüssel abfragen, bei GitHub prüfen und im Schlüsselbund speichern
 [ -n "$(git config credential.helper || true)" ] || git config --global credential.helper osxkeychain
+
+# Fragt GitHub, was der Schlüssel darf: ok | falsch | kein-repo | nur-lesen | offline.
+# Der Schlüssel geht per stdin an curl, damit er nicht in der Prozessliste steht.
+token_check() {
+  local code
+  code=$(printf 'header = "Authorization: Bearer %s"\n' "$1" |
+    curl -s -o /dev/null -w '%{http_code}' -K - "https://api.github.com/repos/$REPO") || code=000
+  case "$code" in
+    200) ;;
+    401) echo falsch; return ;;
+    403 | 404) echo kein-repo; return ;;
+    *) echo offline; return ;;
+  esac
+  # Schreibrecht: git-receive-pack beantwortet GitHub nur mit Contents = Read and write
+  code=$(printf 'user = "%s:%s"\n' "$OWNER" "$1" |
+    curl -s -o /dev/null -w '%{http_code}' -K - "https://github.com/$REPO.git/info/refs?service=git-receive-pack") || code=000
+  case "$code" in
+    200) echo ok ;;
+    401) echo falsch ;;
+    403 | 404) echo nur-lesen ;;
+    *) echo offline ;;
+  esac
+}
+
 if ! GIT_TERMINAL_PROMPT=0 git ls-remote -q "$URL" HEAD >/dev/null 2>&1; then
   say "Zugangsschlüssel für $REPO"
-  echo "Nimm denselben wie im Lernstudio (beginnt mit github_pat_). Die Eingabe bleibt unsichtbar."
-  read -r -s -p "Schlüssel: " TOKEN </dev/tty
-  echo
-  [ -n "$TOKEN" ] || fail "Kein Schlüssel eingegeben."
+  echo "Schlüssel von GitHub (beginnt mit github_pat_) hier einfügen: ⌘V, dann Enter. Man sieht dabei nichts, das ist Absicht."
+  while :; do
+    read -r -s -p "Schlüssel: " TOKEN </dev/tty
+    echo
+    TOKEN=$(printf %s "$TOKEN" | tr -d '[:space:]')
+    [ -n "$TOKEN" ] || fail "Abgebrochen, kein Schlüssel eingegeben."
+    case "$TOKEN" in
+      github_pat_* | ghp_*) ;;
+      *)
+        echo "Das ist kein GitHub-Schlüssel (der beginnt mit github_pat_). Nochmal kopieren und einfügen, oder nur Enter zum Abbrechen."
+        continue
+        ;;
+    esac
+    case "$(token_check "$TOKEN")" in
+      ok) break ;;
+      falsch) echo "GitHub kennt diesen Schlüssel nicht (unvollständig kopiert, abgelaufen oder gelöscht). Neuen einfügen, oder nur Enter zum Abbrechen." ;;
+      kein-repo) echo "Der Schlüssel gilt nicht für $REPO. Auf GitHub beim Schlüssel „Edit“ → Repository access → „Only select repositories“ → ${REPO#*/} auswählen → speichern. Dann denselben Schlüssel hier nochmal einfügen." ;;
+      nur-lesen) echo "Der Schlüssel darf $REPO nur lesen. Auf GitHub beim Schlüssel „Edit“ → Permissions → Contents → „Read and write“ → speichern. Dann denselben Schlüssel hier nochmal einfügen." ;;
+      *) fail "GitHub ist gerade nicht erreichbar. Internet prüfen und den Befehl nochmal starten." ;;
+    esac
+  done
+  # Alten Eintrag zuerst löschen: ältere Schlüsselbund-Helfer von git überschreiben vorhandene Einträge nicht.
+  printf 'protocol=https\nhost=github.com\nusername=%s\n\n' "$OWNER" | git credential reject
   printf 'protocol=https\nhost=github.com\nusername=%s\npassword=%s\n\n' "$OWNER" "$TOKEN" | git credential approve
   unset TOKEN
   GIT_TERMINAL_PROMPT=0 git ls-remote -q "$URL" HEAD >/dev/null 2>&1 ||
-    fail "GitHub lässt den Schlüssel nicht zu. Prüfe: richtiges Repo ausgewählt, Contents = Read and write, nicht abgelaufen."
+    fail "Der Schlüssel passt, aber git findet ihn nicht im Schlüsselbund. Bitte die Ausgabe von: git config --show-origin --get-all credential.helper an Claude schicken."
 fi
 
 # 3. Vault holen (oder vorhandenen weiterverwenden)
