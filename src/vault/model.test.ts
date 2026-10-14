@@ -187,6 +187,42 @@ describe('Kurzdefinition', () => {
   })
 })
 
+describe('Fächer aus der Ablage', () => {
+  it('erkennt Fächer aus raw/-Ordnern, solange der Vault noch keine eigenen hat', () => {
+    const model = buildModel(
+      [
+        { path: 'wiki/dashboard/home.md', sha: '1', size: 1 },
+        { path: 'raw/archive-upload/SS26/fiwi/notes/2026-07-28 FIWI.md', sha: '2', size: 1 },
+        { path: 'raw/archive-upload/SS26/eal-102-economics/notes/2026-07-17 EAL.md', sha: '3', size: 1 },
+        { path: 'raw/archive-upload/WS2526/rewe/notes/2026-05-04 REWE.md', sha: '4', size: 1 },
+        { path: 'raw/notes/2026-07-07 Lernplan.md', sha: '5', size: 1 },
+      ],
+      new Map([['wiki/dashboard/home.md', "const SUBJECTS = {\n  'beispiel-fach-1': { label: 'Beispiel', active: true },\n}"]]),
+    )
+    const derived = model.subjects.filter((s) => !s.slug.startsWith('beispiel'))
+    expect(derived.map((s) => [s.label, s.semester, s.active])).toEqual([
+      ['EAL 102 Economics', 'SS26', true],
+      ['FIWI', 'SS26', true],
+      ['REWE', 'WS25/26', true],
+    ])
+    expect(model.raw.find((r) => r.name.startsWith('2026-07-17'))).toMatchObject({ subject: 'eal-102-economics', kind: 'notes' })
+  })
+
+  it('legt Ordner-Fächer neben echten Fächern ins Archiv', () => {
+    const model = buildModel(
+      [
+        { path: 'wiki/subjects/statistik.md', sha: '1', size: 1 },
+        { path: 'raw/archive-upload/WS2526/rewe/notes/a.md', sha: '2', size: 1 },
+      ],
+      new Map([['wiki/subjects/statistik.md', '---\ntitle: Statistik\nstatus: in_progress\n---']]),
+    )
+    expect(model.subjects.map((s) => [s.slug, s.active])).toEqual([
+      ['statistik', true],
+      ['rewe', false],
+    ])
+  })
+})
+
 describe('Kurzdefinition an Wortgrenzen', () => {
   it('schneidet nach „Netz.“ trotz Abkürzung „z.“', () => {
     expect(oneLiner('## Definition\nDie Daten liegen verteilt im ganzen Netz. Danach kommt mehr.')).toBe('Die Daten liegen verteilt im ganzen Netz.')

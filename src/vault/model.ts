@@ -201,6 +201,52 @@ export function classifyRaw(entry: TreeEntry, subjectSlugs: Set<string>): RawFil
   return { path: entry.path, name: basename(entry.path), subject, kind, size: entry.size, sha: entry.sha }
 }
 
+/** „fiwi“ → „FIWI“, „eal-102-economics“ → „EAL 102 Economics“ (kurze Wörter sind meist Kürzel). */
+export function labelFromSlug(slug: string): string {
+  return slug
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((w) => (/^[a-z]{2,4}$/.test(w) ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1)))
+    .join(' ')
+}
+
+/** Ordnername → Semester-Name: „WS2526“ → „WS25/26“, „SS26“ bleibt. */
+export function semesterFromFolder(folder: string): string {
+  const m = folder.match(/^(WS|SS|SoSe|WiSe)(\d{2})(\d{2})$/)
+  return m ? `${m[1]}${m[2]}/${m[3]}` : folder
+}
+
+/**
+ * Fächer, die es nur als Ordner in raw/ gibt (z. B. nach einem Import, bevor Claude Code den Vault
+ * eingerichtet hat). Ohne eigene Fächer im Vault gelten sie als aktiv, sonst landen sie im Archiv.
+ */
+function subjectsFromFolders(raw: RawFile[], known: Set<string>, configured: Subject[]): Subject[] {
+  const folders = new Map<string, string>()
+  for (const r of raw) {
+    if (!r.subject || known.has(r.subject) || folders.has(r.subject)) continue
+    const parts = r.path.split('/')
+    folders.set(r.subject, parts[1] === 'archive-upload' ? parts[2] : parts[1])
+  }
+  const hasOwn = configured.some((s) => !s.slug.startsWith('beispiel-fach'))
+  const list = [...folders].map(([slug, folder], i): Subject => {
+    const label = labelFromSlug(slug)
+    return {
+      slug,
+      label,
+      short: label.split(/\s+/).map((w) => w[0]).join('').slice(0, 3).toUpperCase(),
+      language: 'de',
+      semester: semesterFromFolder(folder),
+      semFolder: folder,
+      status: 'pending',
+      active: !hasOwn,
+      color: SUBJECT_PALETTE[(configured.length + i) % SUBJECT_PALETTE.length],
+    }
+  })
+  // neueste Semester zuerst (SS26 vor WS2526), innerhalb alphabetisch
+  const year = (s: Subject) => Number(s.semFolder.match(/\d{2}/)?.[0] ?? 0) + (s.semFolder.startsWith('W') ? 0.5 : 0)
+  return list.sort((a, b) => year(b) - year(a) || a.label.localeCompare(b.label, 'de'))
+}
+
 export function buildModel(entries: TreeEntry[], texts: Map<string, string>): VaultModel {
   const home = texts.get('wiki/dashboard/home.md') ?? ''
   const semester = parseSemesterConfig(home)
@@ -288,6 +334,7 @@ export function buildModel(entries: TreeEntry[], texts: Map<string, string>): Va
 
   const slugSet = new Set(subjects.map((s) => s.slug))
   const raw = entries.map((e) => classifyRaw(e, slugSet)).filter((r): r is RawFile => !!r)
+  subjects.push(...subjectsFromFolders(raw, slugSet, subjects))
   const needsSetup = /\[TODO/.test(texts.get('CLAUDE.md') ?? '') || subjects.some((s) => s.slug.startsWith('beispiel-fach'))
 
   return {

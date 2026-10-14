@@ -20,6 +20,12 @@ export default function NoteView({ route }: { route: Route }) {
   return path.endsWith('.md') ? <MarkdownNote path={path} /> : <FileView path={path} />
 }
 
+/** Steht oben in der Note nochmal „# Titel“, zeigt der Seitenkopf ihn schon: dann einmal reicht. */
+function dropTitleHeading(text: string, title: string): string {
+  const escaped = title.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return text.replace(new RegExp(`^((?:---\\r?\\n[\\s\\S]*?\\r?\\n---\\r?\\n)?\\s*)# ${escaped}[ \\t]*(?:\\r?\\n|$)`), '$1')
+}
+
 function MarkdownNote({ path }: { path: string }) {
   const vault = useVault()
   const { model, config } = vault
@@ -82,7 +88,7 @@ function MarkdownNote({ path }: { path: string }) {
         }
       />
       <div className="two-col wide-main">
-        <article className="card note-card">{text !== undefined ? <Markdown text={text} path={path} /> : <p className="muted">Konnte die Note nicht laden.</p>}</article>
+        <article className="card note-card">{text !== undefined ? <Markdown text={dropTitleHeading(text, title)} path={path} /> : <p className="muted">Konnte die Note nicht laden.</p>}</article>
         <aside className="stack">
           {concept && (
             <div className="card meta-card">
