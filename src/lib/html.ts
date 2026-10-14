@@ -55,6 +55,17 @@ export function sanitize(html: string): string {
         continue
       }
       if (tag === 'A') {
+        // eingebettete Datei (Foliensatz): nur der Dateiname zählt
+        const file = el.getAttribute('data-file')
+        if (file !== null) {
+          if (FILE_NAME_RE.test(file)) {
+            const a = document.createElement('a')
+            a.setAttribute('data-file', file)
+            a.textContent = `📄 ${file}`
+            dst.appendChild(a)
+          }
+          continue
+        }
         const href = el.getAttribute('href') ?? ''
         if (/^https?:\/\//i.test(href)) {
           const a = document.createElement('a')
@@ -76,6 +87,24 @@ export function sanitize(html: string): string {
   }
   walk(parse(html), out.content)
   return out.innerHTML
+}
+
+/**
+ * Kann der App-Editor diese Notiz bearbeiten, ohne etwas kaputt zu machen? Er kennt Absätze,
+ * Überschriften, einfache Listen, Zitate, Markierungen, Bilder und Datei-Einbettungen.
+ * Callouts/aufklappbare Kästen, Tabellen, Formeln, Links auf andere Notes, eingerückte Listen
+ * und HTML gehen beim Speichern verloren, solche Notizen bearbeitet man in Obsidian.
+ */
+export function canEditInApp(markdownBody: string): boolean {
+  const body = markdownBody.replace(/```[\s\S]*?```/g, '')
+  return !(
+    /^\s*>\s*\[!/m.test(body) || // Callout
+    /^\s*\|.*\|\s*$/m.test(body) || // Tabelle
+    /\$\$|\$[^$\s][^$\n]*\$/.test(body) || // Formel
+    /(^|[^!])\[\[/.test(body) || // Link auf andere Note
+    /^[ \t]+([-*+]|\d+\.)\s/m.test(body) || // eingerückte Liste
+    /<\/?(details|summary|table|div|span)\b/i.test(body) // HTML
+  )
 }
 
 export function imagesIn(html: string): string[] {
@@ -147,7 +176,8 @@ export function toMarkdown(html: string): string {
           s += `~~${walk(el)}~~`
           break
         case 'A':
-          s += `[${walk(el)}](${el.getAttribute('href') ?? ''})`
+          if (el.hasAttribute('data-file')) s += `\n![[${el.getAttribute('data-file')}]]\n`
+          else s += `[${walk(el)}](${el.getAttribute('href') ?? ''})`
           break
         case 'TR':
           s += `\n| ${Array.from(el.children).map((c) => walk(c).trim().replace(/\|/g, '/')).join(' | ')} |`

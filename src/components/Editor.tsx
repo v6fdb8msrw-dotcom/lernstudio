@@ -1,10 +1,11 @@
-import { Highlighter, ImagePlus, List, ListOrdered, Quote, Trash2 } from 'lucide-react'
+import { FileUp, Highlighter, ImagePlus, List, ListOrdered, Quote, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { escapeHtml, sanitize } from '../lib/html'
 
 /*
  * Schreibfeld für Mitschriften: formatiert schreiben wie in Notion (Überschriften, Listen, Markierungen),
- * Fotos einfügen per Knopf, Einfügen oder Drag & Drop. Markdown-Kürzel: „# “, „## “, „- “, „1. “, „> “.
+ * Fotos und Screenshots einfügen per Knopf, ⌘V oder Drag & Drop, Foliensätze (PDF, PowerPoint, Keynote)
+ * genauso. Markdown-Kürzel: „# “, „## “, „- “, „1. “, „> “.
  * Gespeichert wird später als Markdown (lib/html.ts → toMarkdown).
  */
 
@@ -21,14 +22,21 @@ interface Props {
   onImage: (file: File) => Promise<{ name: string; url: string } | undefined>
   /** Anzeige-URLs für bereits vorhandene Bilder */
   resolveImage: (name: string) => Promise<string | undefined>
+  /** Foliensatz o. Ä. ablegen; liefert den Dateinamen für ![[…]] */
+  onFile?: (file: File) => Promise<{ name: string } | undefined>
   placeholder?: string
 }
 
-export function Editor({ initialHtml, apiRef, onChange, onImage, resolveImage, placeholder }: Props) {
+/** Dateien, die als Foliensatz eingebettet werden (alles andere außer Bildern wird ignoriert). */
+export const SLIDE_FILE = /\.(pdf|pptx?|key)$/i
+const isImage = (f: File) => f.type.startsWith('image/') || /\.(heic|heif)$/i.test(f.name)
+
+export function Editor({ initialHtml, apiRef, onChange, onImage, resolveImage, onFile, placeholder }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const slideRef = useRef<HTMLInputElement>(null)
   const saved = useRef<Range | null>(null)
-  const [selImg, setSelImg] = useState<HTMLImageElement | null>(null)
+  const [selImg, setSelImg] = useState<HTMLElement | null>(null)
   const [empty, setEmpty] = useState(true)
 
   // Inhalt nur beim ersten Anzeigen setzen; danach gehört das Feld dem Nutzer
@@ -43,14 +51,13 @@ export function Editor({ initialHtml, apiRef, onChange, onImage, resolveImage, p
     } catch {
       // ältere Browser
     }
+    // Bleibt auch nach dem Schließen gültig, damit beim Verlassen noch gespeichert werden kann
     apiRef.current = { html: () => sanitize(ed.innerHTML), focus: () => ed.focus() }
-    return () => {
-      apiRef.current = null
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function hydrate(root: HTMLElement) {
+    for (const a of Array.from(root.querySelectorAll<HTMLElement>('a[data-file]'))) a.contentEditable = 'false'
     for (const img of Array.from(root.querySelectorAll<HTMLImageElement>('img[data-file]'))) {
       if (img.src) continue
       void resolveImage(img.dataset.file!).then((url) => {
@@ -102,9 +109,10 @@ export function Editor({ initialHtml, apiRef, onChange, onImage, resolveImage, p
   }
 
   const cmd = (c: string) => {
-    if (c === 'image') {
+    if (c === 'image' || c === 'slides') {
       remember()
-      fileRef.current?.click()
+      const input = c === 'image' ? fileRef.current : slideRef.current
+      input?.click()
       return
     }
     ref.current!.focus()
@@ -150,22 +158,32 @@ export function Editor({ initialHtml, apiRef, onChange, onImage, resolveImage, p
     else exec('formatBlock', `<${rule}>`)
   }
 
-  async function addImages(files: File[]) {
+  async function addFiles(files: File[]) {
     let first = true
     for (const f of files) {
-      const res = await onImage(f)
-      if (!res) continue
-      if (first) restore()
-      first = false
-      exec('insertHTML', `<p><img data-file="${escapeHtml(res.name)}" src="${escapeHtml(res.url)}" alt=""></p><p><br></p>`)
+      if (isImage(f)) {
+        const res = await onImage(f)
+        if (!res) continue
+        if (first) restore()
+        first = false
+        exec('insertHTML', `<p><img data-file="${escapeHtml(res.name)}" src="${escapeHtml(res.url)}" alt=""></p><p><br></p>`)
+      } else if (onFile && SLIDE_FILE.test(f.name)) {
+        const res = await onFile(f)
+        if (!res) continue
+        if (first) restore()
+        first = false
+        exec('insertHTML', `<p><a data-file="${escapeHtml(res.name)}" contenteditable="false">📄 ${escapeHtml(res.name)}</a></p><p><br></p>`)
+      }
     }
   }
+
+  const usable = (files: File[]) => files.filter((f) => isImage(f) || (onFile && SLIDE_FILE.test(f.name)))
 
   const removeImg = () => {
     if (!selImg) return
     const p = selImg.parentElement
     selImg.remove()
-    if (p && p !== ref.current && !p.textContent?.trim() && !p.querySelector('img')) p.remove()
+    if (p && p !== ref.current && !p.textContent?.trim() && !p.querySelector('img, a[data-file]')) p.remove()
     setSelImg(null)
     changed()
   }
@@ -196,12 +214,17 @@ export function Editor({ initialHtml, apiRef, onChange, onImage, resolveImage, p
           <Quote size={16} />
         </button>
         <span className="tb-div" />
-        <button type="button" onClick={() => cmd('image')} title="Foto oder Bild einfügen">
+        <button type="button" onClick={() => cmd('image')} title="Foto, Bild oder Screenshot einfügen">
           <ImagePlus size={16} /> Bild
         </button>
+        {onFile && (
+          <button type="button" onClick={() => cmd('slides')} title="Foliensatz einfügen (PDF, PowerPoint, Keynote)">
+            <FileUp size={16} /> Folien
+          </button>
+        )}
       </div>
       <div className="editor-area">
-        {empty && <div className="editor-placeholder">{placeholder ?? 'Schreib los … # für Überschrift, - für Liste, Fotos einfach reinziehen'}</div>}
+        {empty && <div className="editor-placeholder">{placeholder ?? 'Schreib los … # für Überschrift, - für Liste. Screenshots mit ⌘V, Fotos und Folien einfach reinziehen.'}</div>}
         <div
           ref={ref}
           className="editor md"
@@ -220,7 +243,7 @@ export function Editor({ initialHtml, apiRef, onChange, onImage, resolveImage, p
           onMouseUp={remember}
           onBlur={remember}
           onClick={(e) => {
-            const img = (e.target as HTMLElement).closest('img') as HTMLImageElement | null
+            const img = (e.target as HTMLElement).closest('img, a[data-file]') as HTMLElement | null
             selImg?.classList.remove('sel')
             if (img) img.classList.add('sel')
             setSelImg(img)
@@ -232,11 +255,11 @@ export function Editor({ initialHtml, apiRef, onChange, onImage, resolveImage, p
             }
           }}
           onPaste={(e) => {
-            const files = Array.from(e.clipboardData.files).filter((f) => f.type.startsWith('image/'))
+            const files = usable(Array.from(e.clipboardData.files))
             if (files.length) {
               e.preventDefault()
               remember()
-              void addImages(files)
+              void addFiles(files)
               return
             }
             const html = e.clipboardData.getData('text/html')
@@ -248,7 +271,7 @@ export function Editor({ initialHtml, apiRef, onChange, onImage, resolveImage, p
             if (Array.from(e.dataTransfer.items).some((i) => i.kind === 'file')) e.preventDefault()
           }}
           onDrop={(e) => {
-            const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/') || /\.(heic|heif)$/i.test(f.name))
+            const files = usable(Array.from(e.dataTransfer.files))
             if (!files.length) return
             e.preventDefault()
             const r = (document as Document & { caretRangeFromPoint?: (x: number, y: number) => Range | null }).caretRangeFromPoint?.(e.clientX, e.clientY)
@@ -258,13 +281,13 @@ export function Editor({ initialHtml, apiRef, onChange, onImage, resolveImage, p
               s.addRange(r)
             }
             remember()
-            void addImages(files)
+            void addFiles(files)
           }}
         />
         {selImg && (
           <div className="img-bar">
             <button type="button" className="btn btn-sm btn-ghost" onClick={removeImg}>
-              <Trash2 size={15} /> Bild entfernen
+              <Trash2 size={15} /> {selImg.tagName === 'IMG' ? 'Bild' : 'Einbettung'} entfernen
             </button>
           </div>
         )}
@@ -278,7 +301,19 @@ export function Editor({ initialHtml, apiRef, onChange, onImage, resolveImage, p
         onChange={(e) => {
           const files = Array.from(e.target.files ?? [])
           e.target.value = ''
-          if (files.length) void addImages(files)
+          if (files.length) void addFiles(files)
+        }}
+      />
+      <input
+        ref={slideRef}
+        type="file"
+        accept=".pdf,.ppt,.pptx,.key,application/pdf"
+        multiple
+        hidden
+        onChange={(e) => {
+          const files = Array.from(e.target.files ?? [])
+          e.target.value = ''
+          if (files.length) void addFiles(files)
         }}
       />
     </div>
@@ -286,5 +321,5 @@ export function Editor({ initialHtml, apiRef, onChange, onImage, resolveImage, p
 }
 
 function isEmpty(ed: HTMLElement): boolean {
-  return !ed.textContent?.trim() && !ed.querySelector('img')
+  return !ed.textContent?.trim() && !ed.querySelector('img, a[data-file]')
 }

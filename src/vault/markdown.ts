@@ -90,6 +90,7 @@ function joinPath(dir: string, rel: string): string {
 }
 
 const CALLOUT = /^\[!(\w+)\]([+-]?)\s*(.*)$/
+const IMAGE_EXT = /\.(png|jpe?g|gif|webp|svg|bmp|avif|heic|heif)$/i
 
 /** Callout-Typen auf wenige Stile abbilden. */
 function calloutKind(type: string): string {
@@ -158,6 +159,19 @@ export function renderMarkdown(markdown: string, opts: RenderOptions): string {
   for (const img of Array.from(root.querySelectorAll('img'))) {
     const embed = img.getAttribute('data-embed')
     const src = img.getAttribute('src') ?? ''
+    // ![[folien.pdf]] oder ![[Andere Note]]: als Datei-Karte zeigen, nicht als Bild
+    if (embed && !IMAGE_EXT.test(embed.split(/[#|]/)[0])) {
+      const target = opts.resolve(embed)
+      const a = document.createElement('a')
+      a.className = 'file-embed'
+      a.textContent = `📄 ${embed.split(/[#|]/)[0].split('/').pop()}`
+      if (target) {
+        a.setAttribute('href', `#/n/${encodeURIComponent(target)}`)
+        a.setAttribute('data-vault', target)
+      } else a.classList.add('missing')
+      img.replaceWith(a)
+      continue
+    }
     let path: string | undefined
     if (embed) path = opts.resolve(embed)
     else if (src && !/^(https?:|data:|blob:)/i.test(src)) path = joinPath(dirOf(opts.notePath), decodeURIComponent(src))

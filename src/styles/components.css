@@ -1170,6 +1170,37 @@ a.list-row:hover {
   margin-right: 6px;
 }
 
+/* Eingebettete Dateien (![[folien.pdf]]): als kleine Karte statt kaputtem Bild */
+.md a.file-embed,
+.editor a[data-file] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 8px 12px;
+  margin: 4px 0;
+  border-radius: 10px;
+  border: 1px solid var(--line-2);
+  background: var(--beige-soft);
+  color: var(--ink);
+  font-weight: 650;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.md a.file-embed:hover {
+  background: var(--beige);
+}
+
+.editor a[data-file] {
+  cursor: default;
+  user-select: none;
+}
+
+.editor a[data-file].sel {
+  outline: 2px solid var(--beige-deep);
+}
+
 .obsidian-only,
 .embed-missing {
   display: block;
@@ -1368,4 +1399,25 @@ details[open] > summary.callout-title::after {
 
 .title-input::placeholder {
   color: var(--ink-4);
+}
+
+/* Speicherstatus der Mitschrift */
+.save-status {
+  font-size: 13px;
+  color: var(--ink-3);
+  align-self: center;
+  max-width: 340px;
+}
+
+.save-status.saving,
+.save-status.waiting {
+  color: var(--beige-ink);
+}
+
+.save-status.saved {
+  color: var(--ok);
+}
+
+.save-status.error {
+  color: var(--danger);
 }

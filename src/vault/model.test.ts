@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
+import { canEditInApp, sanitize, toMarkdown } from '../lib/html'
 import { applyEdit } from './edits'
 import { splitFrontmatter } from './frontmatter'
 import { renderMarkdown } from './markdown'
@@ -226,5 +227,27 @@ describe('Fächer aus der Ablage', () => {
 describe('Kurzdefinition an Wortgrenzen', () => {
   it('schneidet nach „Netz.“ trotz Abkürzung „z.“', () => {
     expect(oneLiner('## Definition\nDie Daten liegen verteilt im ganzen Netz. Danach kommt mehr.')).toBe('Die Daten liegen verteilt im ganzen Netz.')
+  })
+})
+
+describe('Mitschrift-Editor und Foliensätze', () => {
+  it('bettet Foliensätze als ![[…]] ein und zeigt sie als Datei-Karte', () => {
+    const html = sanitize('<p>Vorlesung</p><p><a data-file="VL3 Regression.pdf" onclick="x()">📄 VL3</a></p><p><a data-file="../evil">x</a></p>')
+    expect(html).toBe('<p>Vorlesung</p><p><a data-file="VL3 Regression.pdf">📄 VL3 Regression.pdf</a></p><p></p>')
+    expect(toMarkdown(html)).toBe('Vorlesung\n\n![[VL3 Regression.pdf]]')
+    const model = buildModel([{ path: 'raw/WS2627/statistik/slides/VL3 Regression.pdf', sha: '1', size: 1 }], new Map())
+    const out = renderMarkdown('![[VL3 Regression.pdf]]', { resolve: (t) => resolveLink(model, t) })
+    expect(out).toContain('class="file-embed"')
+    expect(out).toContain('href="#/n/raw%2FWS2627%2Fstatistik%2Fslides%2FVL3%20Regression.pdf"')
+    expect(out).not.toContain('<img')
+  })
+
+  it('lässt nur Notizen in den App-Editor, die er verlustfrei speichern kann', () => {
+    expect(canEditInApp('# VL 3\n\nText mit **fett** und ==markiert==.\n\n- Punkt\n- Punkt\n\n![[foto.jpg]]\n\n![[VL3.pdf]]')).toBe(true)
+    expect(canEditInApp('> [!note]- Toggle\n> Inhalt')).toBe(false)
+    expect(canEditInApp('| a | b |\n| --- | --- |\n| 1 | 2 |')).toBe(false)
+    expect(canEditInApp('Formel $B_0 = R / i$')).toBe(false)
+    expect(canEditInApp('Siehe [[Varianz]]')).toBe(false)
+    expect(canEditInApp('- oben\n    - eingerückt')).toBe(false)
   })
 })

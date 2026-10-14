@@ -1,10 +1,11 @@
-import { ExternalLink, Share, Sparkles } from 'lucide-react'
+import { ExternalLink, PenLine, Share, Sparkles } from 'lucide-react'
 import { useMemo, useState, type CSSProperties } from 'react'
 import { useFileUrl, useVaultText } from '../components/hooks'
 import { Markdown } from '../components/Markdown'
 import { Empty, Modal, PageHead, Spinner, StatusChip } from '../components/ui'
 import { NOTE_PROMPTS, openInClaude } from '../lib/claude'
 import { fileKind, formatSize } from '../lib/files'
+import { canEditInApp } from '../lib/html'
 import { plain } from '../lib/search'
 import { href, type Route } from '../state/router'
 import { useToast } from '../state/toast'
@@ -45,6 +46,9 @@ function MarkdownNote({ path }: { path: string }) {
     return model.markdown.filter((p) => p !== path && !p.endsWith('_index.md') && re.test(vault.textNow(p) ?? '')).slice(0, 30)
   }, [model.markdown, path, vault])
 
+  // Eigene Mitschriften (raw/) lassen sich in der App weiterschreiben, wenn der App-Editor sie verlustfrei kann
+  const editable = path.startsWith('raw/') && fm !== undefined && canEditInApp(fm.body)
+
   const obsidian = config?.obsidianVault ? `obsidian://open?vault=${encodeURIComponent(config.obsidianVault)}&file=${encodeURIComponent(path.replace(/\.md$/, ''))}` : undefined
 
   async function ask(id: string) {
@@ -76,6 +80,11 @@ function MarkdownNote({ path }: { path: string }) {
         actions={
           <>
             {concept && <StatusChip status={concept.status} />}
+            {editable && (
+              <a className="btn" href={href(`/mitschrift?pfad=${encodeURIComponent(path)}`)}>
+                <PenLine size={16} /> Bearbeiten
+              </a>
+            )}
             <button type="button" className="btn" onClick={() => setClaude(true)}>
               <Sparkles size={16} /> Mit Claude besprechen
             </button>

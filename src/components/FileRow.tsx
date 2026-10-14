@@ -5,12 +5,12 @@ import type { RawFile } from '../types'
 
 const ICONS = { pdf: FileText, image: FileImage, text: NotebookPen, doc: FileText, slides: Presentation, sheet: Sheet, audio: Music, video: Film, other: File }
 
-/** Eine Rohdatei aus raw/ in einer Liste. Markdown-Mitschriften öffnen den Editor, alles andere die Ansicht. */
+/** Eine Rohdatei aus raw/ in einer Liste. Öffnet immer erst die Ansicht, bearbeitet wird von dort aus. */
 export function FileRow({ file }: { file: RawFile }) {
   const kind = fileKind('', file.name)
   const Icon = ICONS[kind]
   const isNote = file.name.toLowerCase().endsWith('.md')
-  const to = isNote ? `/mitschrift?pfad=${encodeURIComponent(file.path)}` : `/n/${encodeURIComponent(file.path)}`
+  const to = `/n/${encodeURIComponent(file.path)}`
   return (
     <a className="list-row" href={href(to)}>
       <span className="file-icon">

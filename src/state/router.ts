@@ -5,13 +5,15 @@ export interface Route {
   path: string
   segments: string[]
   query: URLSearchParams
+  /** Zeitpunkt der Navigation: gleiche Adresse nochmal aufrufen ergibt eine neue Seite (z. B. neue Mitschrift) */
+  stamp: number
 }
 
 function parse(): Route {
   const raw = window.location.hash.replace(/^#/, '') || '/'
   const [pathPart, queryPart = ''] = raw.split('?')
   const path = pathPart.startsWith('/') ? pathPart : `/${pathPart}`
-  return { path, segments: path.split('/').filter(Boolean), query: new URLSearchParams(queryPart) }
+  return { path, segments: path.split('/').filter(Boolean), query: new URLSearchParams(queryPart), stamp: Date.now() }
 }
 
 export function useRoute(): Route {

@@ -108,7 +108,7 @@ export default function SearchPage({ route }: { route: Route }) {
               <ul className="card list">
                 {files.map((f) => (
                   <li key={f.path}>
-                    <a className="list-row" href={href(f.name.endsWith('.md') ? `/mitschrift?pfad=${encodeURIComponent(f.path)}` : `/n/${encodeURIComponent(f.path)}`)}>
+                    <a className="list-row" href={href(`/n/${encodeURIComponent(f.path)}`)}>
                       <span className="file-icon">
                         <FileText size={17} />
                       </span>

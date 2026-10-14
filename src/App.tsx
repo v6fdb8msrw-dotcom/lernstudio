@@ -32,7 +32,7 @@ function Page({ route }: { route: Route }) {
     case 'hochladen':
       return <UploadPage route={route} />
     case 'mitschrift':
-      return <MitschriftPage route={route} />
+      return <MitschriftPage key={route.stamp} route={route} />
     case 'todos':
       return <TodosPage />
     case 'claude':
