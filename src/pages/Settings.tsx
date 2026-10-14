@@ -1,7 +1,8 @@
-import { AlertTriangle, CheckCircle2, ExternalLink, KeyRound, RefreshCw, Unplug } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Copy, ExternalLink, KeyRound, Laptop, RefreshCw, Unplug } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ConfirmButton } from '../components/ConfirmButton'
 import { Field, Notice, PageHead } from '../components/ui'
+import { copyText } from '../lib/claude'
 import { formatSize } from '../lib/files'
 import { relativeTime } from '../lib/date'
 import { useToast } from '../state/toast'
@@ -20,6 +21,8 @@ export default function SettingsPage() {
   useEffect(() => {
     void navigator.storage?.estimate?.().then((e) => setUsage({ used: e.usage ?? 0, quota: e.quota ?? 0 }))
   }, [vault.lastSync])
+
+  const obsidianCommand = `bash -c "$(curl -fsSL ${new URL('obsidian-mac.sh', window.location.origin + import.meta.env.BASE_URL).href})" setup ${cfg.owner || 'BESITZER'}/${cfg.repo || 'REPO'}`
 
   const set = (k: keyof VaultConfig) => (e: { target: { value: string } }) => setCfg((c) => ({ ...c, [k]: e.target.value.trim() }))
 
@@ -97,12 +100,38 @@ export default function SettingsPage() {
               <b>Repository access:</b> „Only select repositories“ → nur dein Vault-Repo ({cfg.repo || 'Uni-'}).
             </li>
             <li>
-              <b>Permissions → Repository permissions → Contents:</b> „Read and write“. Sonst nichts.
+              <b>Permissions:</b> auf „+ Add permissions“ klicken, „Contents“ auswählen und rechts daneben „Read and write“ einstellen. (In der
+              älteren GitHub-Ansicht: Repository permissions → Contents → Read and write.) Sonst nichts.
             </li>
             <li>„Generate token“, Schlüssel kopieren und oben einfügen. Auf iPhone und Mac jeweils einmal eintragen.</li>
           </ol>
           <p className="muted small">Der Schlüssel darf nur dieses eine Repo lesen und schreiben. Wird ein Gerät verloren, löschst du ihn auf GitHub einfach.</p>
         </details>
+      </section>
+
+      <section className="card stack">
+        <h2>
+          <Laptop size={17} /> Obsidian am Mac – automatisch abgeglichen
+        </h2>
+        <p className="muted">
+          Obsidian ist dein Schreibtisch, der Lernstudio dein Lern-Cockpit – beide arbeiten auf denselben Dateien. Einmal am Mac im Terminal (Programme →
+          Dienstprogramme) diesen Befehl einfügen und Enter drücken. Er fragt nach deinem Zugangsschlüssel (derselbe wie oben).
+        </p>
+        <code className="command">{obsidianCommand}</code>
+        <div className="page-actions">
+          <button
+            type="button"
+            className="btn"
+            onClick={async () => ((await copyText(obsidianCommand)) ? toast('Befehl kopiert – im Terminal einfügen') : toast('Kopieren ging nicht – bitte markieren und kopieren', 'error'))}
+          >
+            <Copy size={16} /> Befehl kopieren
+          </button>
+        </div>
+        <ul className="plain-list muted small">
+          <li>Der Vault landet in deinem Benutzerordner unter „Uni“. In Obsidian: „Open folder as vault“ → diesen Ordner.</li>
+          <li>Alle 2 Minuten gleicht der Mac im Hintergrund ab: Was du in Obsidian schreibst, erscheint hier; was du hier anlegst, erscheint in Obsidian.</li>
+          <li>Screenshots mit ⌘⇧4 und dann ⌘V in die Notiz, Foliensätze einfach reinziehen – in Obsidian wie hier.</li>
+        </ul>
       </section>
 
       <section className="card stack">

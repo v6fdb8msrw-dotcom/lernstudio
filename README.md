@@ -22,7 +22,7 @@ React · TypeScript · Vite · IndexedDB · installierbare PWA. Komplett kostenl
 | **Concept-Ansicht** | Obsidian-Markdown mit `[[Wikilinks]]`, eingebetteten Bildern, Callouts, aufklappbaren Selbsttest-Fragen, „Verlinkt von“, Knopf „In Obsidian öffnen“ und „Mit Claude besprechen“ (erklären, abfragen, zusammenfassen …). |
 | **Suche** | Volltext über alle Notes im Vault und die Namen deiner hochgeladenen Dateien. |
 | **Hochladen** | Viele Dateien auf einmal oder ganze Ordner (am Mac). Sie landen in `raw/<Semester>/<Fach>/<slides|notes|books|papers|videos>/`, alles in einem Commit. Danach steht der passende Befehl für Claude Code zum Kopieren bereit. YouTube-Links werden als `.txt` abgelegt. |
-| **Mitschrift** | Schreiben wie in Notion, mit Überschriften, Listen, Markierungen und Fotos (Kamera am iPhone, Drag & Drop am Mac). Die Mitschrift wird als Markdown in `raw/…/notes/` gespeichert, Fotos landen in `raw/assets/` (wie bei Obsidian). Mitschriften sind laut Vault der Auslöser für fertige Concept-Notes. |
+| **Mitschrift** | Schreiben wie in Notion, mit Überschriften, Listen, Markierungen und Fotos. Screenshots mit ⌘V, Fotos und Foliensätze (PDF, PowerPoint, Keynote) per Knopf oder Drag & Drop. **Speichert automatisch** (nach kurzer Tipp-Pause, spätestens alle 45 s und beim Verlassen) als Markdown in `raw/…/notes/`; Fotos landen in `raw/assets/`, Foliensätze sofort in `raw/…/slides/` und stehen als `![[…]]` in der Mitschrift. Notizen mit Kästen, Tabellen oder Formeln (z. B. aus Notion) bearbeitest du in Obsidian, die App zeigt sie nur an. |
 | **Todos** | Liest und schreibt `wiki/dashboard/todos.md`: abhaken und neue anlegen. Gelöscht wird nie etwas, und die Format-Kommentare für Claude bleiben stehen. |
 | **Claude** | Claude Chat öffnet claude.ai mit deiner Frage (optional mit den Begriffen eines Fachs als Kontext). Claude Code: alle Befehle aus `commands.md` zum Ausfüllen, Kopieren und Öffnen. |
 
@@ -66,6 +66,21 @@ Die App braucht ein **eigenes, öffentliches** Repo, denn GitHub Pages ist im Gr
 - **Mac (Safari):** *Ablage → Zum Dock hinzufügen*. **Chrome:** Installieren-Symbol rechts in der Adressleiste.
 
 Updates kommen von selbst: Nach jedem Push lädt die installierte App die neue Version, sobald du nichts tippst.
+
+### Obsidian am Mac als Hauptwerkzeug
+Obsidian und der Lernstudio arbeiten auf denselben Dateien. Damit beides von selbst zusammenpasst, einmal im Terminal ausführen
+(der Befehl steht mit deinen Daten auch in der App unter **Einstellungen**):
+
+```bash
+bash -c "$(curl -fsSL https://<dein-github-name>.github.io/lernstudio/obsidian-mac.sh)" setup <dein-github-name>/<vault-repo>
+```
+
+Das Skript (`public/obsidian-mac.sh`) holt den Vault nach `~/Uni` (Git-Daten getrennt in `~/.lernstudio-vault.git`), legt deinen
+Zugangsschlüssel in den macOS-Schlüsselbund und richtet einen Hintergrund-Job ein, der alle 2 Minuten abgleicht: was du in
+Obsidian schreibst, geht zu GitHub (Lernstudio, Claude); was dort neu ist, kommt in Obsidian an. Nie Force-Push, bei Konflikten
+bricht der Abgleich ab (Log: `~/Library/Logs/uni-knowledge-sync.log`). In Obsidian dann „Open folder as vault“ → `~/Uni`.
+
+Abschalten: `launchctl unload ~/Library/LaunchAgents/local.uni-knowledge-sync.plist`
 
 ---
 
