@@ -1,0 +1,36 @@
+import { useEffect, useState } from 'react'
+
+/** Einfaches Hash-Routing (#/rezepte/r001?portionen=2). Funktioniert ohne Server-Konfiguration, auch auf GitHub Pages. */
+export interface Route {
+  path: string
+  segments: string[]
+  query: URLSearchParams
+}
+
+function parse(): Route {
+  const raw = window.location.hash.replace(/^#/, '') || '/'
+  const [pathPart, queryPart = ''] = raw.split('?')
+  const path = pathPart.startsWith('/') ? pathPart : `/${pathPart}`
+  return { path, segments: path.split('/').filter(Boolean), query: new URLSearchParams(queryPart) }
+}
+
+export function useRoute(): Route {
+  const [route, setRoute] = useState<Route>(parse)
+  useEffect(() => {
+    const onChange = () => setRoute(parse())
+    window.addEventListener('hashchange', onChange)
+    return () => window.removeEventListener('hashchange', onChange)
+  }, [])
+  return route
+}
+
+export function navigate(to: string): void {
+  const target = to.startsWith('#') ? to : `#${to}`
+  if (window.location.hash === target) return
+  window.location.hash = target
+  window.scrollTo({ top: 0 })
+}
+
+export function href(to: string): string {
+  return `#${to}`
+}

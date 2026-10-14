@@ -1,0 +1,225 @@
+/* ---------- App-Rahmen ---------- */
+
+.app {
+  min-height: 100dvh;
+  background:
+    radial-gradient(70vmax 40vmax at 100% -10%, var(--beige-soft), transparent 60%),
+    var(--bg);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.brand-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: var(--silver-grad);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.9), 0 0 0 1px var(--silver-2), var(--shadow-1);
+  flex: none;
+}
+
+.brand-mark.sm {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+}
+
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 26px;
+  line-height: 1;
+}
+
+.brand-sub {
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-top: 4px;
+}
+
+/* Leiste der Unterseiten */
+.appbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: calc(env(safe-area-inset-top) + 10px) var(--gutter) 10px;
+  padding-left: max(var(--gutter), env(safe-area-inset-left));
+  padding-right: max(var(--gutter), env(safe-area-inset-right));
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: saturate(1.4) blur(18px);
+  -webkit-backdrop-filter: saturate(1.4) blur(18px);
+  border-bottom: 1px solid var(--line);
+}
+
+.appbar-row {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.appbar-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 12px 5px 8px;
+  border-radius: 14px;
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 650;
+  font-size: 14px;
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  transition: border-color var(--dur-1) var(--ease), background var(--dur-1) var(--ease);
+  flex: none;
+}
+
+.appbar-back:hover {
+  border-color: var(--silver-3);
+  background: var(--surface-2);
+}
+
+.area-nav {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  min-width: 0;
+  flex: 1;
+  padding: 2px;
+}
+
+.area-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.area-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 11px;
+  font-size: 13.5px;
+  font-weight: 620;
+  color: var(--ink-3);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
+}
+
+.area-nav a:hover {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+
+.area-nav a[aria-current='page'] {
+  color: var(--ink);
+  background: var(--beige-soft);
+  box-shadow: inset 0 0 0 1px var(--beige);
+}
+
+.area-nav a[aria-current='page'] svg {
+  color: var(--beige-ink);
+}
+
+.appbar-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+
+.main {
+  min-width: 0;
+  padding: 28px var(--gutter) 120px;
+  padding-left: max(var(--gutter), env(safe-area-inset-left));
+  padding-right: max(var(--gutter), env(safe-area-inset-right));
+}
+
+.main-home {
+  padding-top: calc(env(safe-area-inset-top) + 18px);
+}
+
+.page {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  animation: page-in var(--dur-2) var(--ease) backwards;
+}
+
+.update-banner {
+  max-width: var(--content-max);
+  margin: 0 auto 18px;
+  align-items: center;
+}
+
+.page-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Plus-Knopf unten rechts */
+.fab {
+  position: fixed;
+  z-index: 41;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: calc(env(safe-area-inset-bottom) + 20px);
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 19px;
+  border: 0;
+  background: var(--contrast);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.9), 0 0 0 5px var(--silver-2), 0 14px 30px rgba(29, 31, 35, 0.22);
+  transition: transform var(--dur-2) var(--ease);
+}
+
+.fab:hover {
+  transform: translateY(-2px) rotate(90deg);
+}
+
+@media (max-width: 760px) {
+  .appbar {
+    padding-top: calc(env(safe-area-inset-top) + 8px);
+    padding-bottom: 8px;
+  }
+  .appbar-row {
+    flex-wrap: wrap;
+    gap: 8px 10px;
+  }
+  .appbar-label {
+    display: none;
+  }
+  .area-nav {
+    order: 3;
+    flex-basis: 100%;
+  }
+  .main {
+    padding-top: 18px;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 110px);
+  }
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+@media (min-width: 761px) {
+  .mobile-only {
+    display: none !important;
+  }
+}

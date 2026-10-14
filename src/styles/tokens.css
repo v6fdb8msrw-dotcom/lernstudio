@@ -1,0 +1,96 @@
+/*
+ * Lernstudio – Designsystem: klares Weiß, feine Silberlinien, warmes Beige als Akzent.
+ * Aufbau wie Muscle Studio (Startseite mit Kacheln, schlanke Leiste auf Unterseiten),
+ * aber hell und ruhig. Dunkle Flächen gibt es nur für Haupt-Knöpfe.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Flächen */
+  --bg: #ffffff;
+  --bg-soft: #faf8f4;
+  --surface: #ffffff;
+  --surface-2: #f7f5f1;
+  --surface-3: #f0ece4;
+
+  /* Beige */
+  --beige: #efe5d3;
+  --beige-soft: #f7f1e6;
+  --beige-deep: #c9ad7f;
+  --beige-ink: #8a6b3c;
+  /* Textmarker in Notizen */
+  --mark: #f3e3bd;
+
+  /* Silber */
+  --silver-1: #f3f4f6;
+  --silver-2: #e3e6ea;
+  --silver-3: #c6cbd2;
+  --silver-4: #9aa1ab;
+  --silver-grad: linear-gradient(135deg, #f7f8fa 0%, #e4e7eb 45%, #f5f6f8 60%, #d9dde2 100%);
+  --silver-edge: linear-gradient(135deg, #c9ced5, #eef0f3 45%, #b8bec6);
+
+  /* Text */
+  --ink: #1d1f23;
+  --ink-2: #4a4f57;
+  --ink-3: #7c828b;
+  --ink-4: #a4a9b1;
+
+  /* Linien */
+  --line: #ebedf0;
+  --line-2: #dde0e5;
+
+  /* Dunkler Knopf */
+  --contrast: #22252a;
+  --contrast-hover: #34383f;
+
+  /* Status */
+  --ok: #3f8a5f;
+  --warn: #b7791f;
+  --warn-soft: #fbf1e1;
+  --danger: #c2453d;
+  --danger-soft: #fbeceb;
+
+  /* Fachfarben: gedeckt, damit es ruhig bleibt */
+  --c-gelb: #c9a646;
+  --c-blau: #5b84b1;
+  --c-gruen: #5f9473;
+  --c-orange: #cd7f4a;
+  --c-pink: #c46a8a;
+  --c-violett: #8571b5;
+  --c-petrol: #3f8e93;
+  --c-rot: #bd5a50;
+
+  /* Form */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 26px;
+
+  --shadow-1: 0 1px 2px rgba(29, 31, 35, 0.05);
+  --shadow-2: 0 8px 24px rgba(29, 31, 35, 0.07), 0 1px 2px rgba(29, 31, 35, 0.04);
+  --shadow-3: 0 24px 60px rgba(29, 31, 35, 0.16);
+
+  --font-sans: 'Manrope Variable', 'Manrope', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+
+  --content-max: 1180px;
+  --gutter: 32px;
+
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-1: 140ms;
+  --dur-2: 240ms;
+}
+
+@media (max-width: 1080px) {
+  :root {
+    --gutter: 24px;
+  }
+}
+
+@media (max-width: 760px) {
+  :root {
+    --gutter: 16px;
+  }
+}
