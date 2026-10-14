@@ -65,6 +65,25 @@ fi
 git -C "$FOLDER" config user.name "$(id -F 2>/dev/null || whoami) (Mac)"
 git -C "$FOLDER" config user.email "${OWNER}@users.noreply.github.com"
 
+# 3b. Obsidian-Erweiterungen fürs Dashboard (Dataview, Homepage, 3D Graph) und das Theme Minimal.
+#     Die Einstellungen liegen schon im Vault, hier kommen nur die Programmdateien dazu (stehen nicht im Repo).
+fetch_release() { # <repo> <zielordner> <datei>…
+  local repo="$1" dir="$2" f
+  shift 2
+  mkdir -p "$dir"
+  for f in "$@"; do
+    curl -fsSL "https://github.com/$repo/releases/latest/download/$f" -o "$dir/$f.tmp" && mv "$dir/$f.tmp" "$dir/$f" ||
+      { rm -f "$dir/$f.tmp"; return 1; }
+  done
+}
+say "Hole die Obsidian-Erweiterungen …"
+PLUG="$FOLDER/.obsidian/plugins"
+fetch_release blacksmithgu/obsidian-dataview "$PLUG/dataview" main.js manifest.json styles.css &&
+  fetch_release mirnovov/obsidian-homepage "$PLUG/homepage" main.js manifest.json styles.css &&
+  fetch_release alexw00/obsidian-3d-graph "$PLUG/3d-graph" main.js manifest.json styles.css &&
+  fetch_release kepano/obsidian-minimal "$FOLDER/.obsidian/themes/Minimal" theme.css manifest.json ||
+  echo "Erweiterungen konnten nicht geladen werden (offline?). Später nochmal ausführen oder in Obsidian unter Community plugins installieren."
+
 # 4. Abgleich alle 2 Minuten. Das Skript liegt außerhalb des Vaults, damit macOS es immer ausführen darf.
 mkdir -p "$SUPPORT" "$HOME/Library/Logs"
 cp "$FOLDER/tools/sync.sh" "$SUPPORT/sync.sh"
@@ -86,10 +105,11 @@ launchctl unload "$PLIST" 2>/dev/null || true
 launchctl load "$PLIST"
 
 say "Fertig ✓"
+[ -d /Applications/Obsidian.app ] || echo "Obsidian fehlt noch: kostenlos auf https://obsidian.md laden und in „Programme“ ziehen."
 cat <<TXT
 • Obsidian öffnen → „Open folder as vault“ → $FOLDER
-  (Obsidian gibt es kostenlos auf obsidian.md.) Für das Dashboard in Obsidian optional: Einstellungen →
-  Community plugins → „Dataview“ und „Homepage“ installieren (Anleitung im README des Vaults).
+  Beim ersten Öffnen fragt Obsidian, ob du dem Vault vertraust → „Trust author and enable plugins“.
+  Dann startet das Dashboard (wiki/dashboard/home) automatisch.
 • Ab jetzt einfach schreiben: Obsidian speichert sofort, alle 2 Minuten geht alles zu GitHub,
   in den Lernstudio und zu Claude. Neues aus dem Lernstudio kommt genauso in Obsidian an.
 • Screenshots: ⌘⇧4 (oder ⌘⇧5), dann in der Notiz ⌘V – das Bild landet in raw/assets.

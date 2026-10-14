@@ -78,7 +78,10 @@ bash -c "$(curl -fsSL https://<dein-github-name>.github.io/lernstudio/obsidian-m
 Das Skript (`public/obsidian-mac.sh`) holt den Vault nach `~/Uni` (Git-Daten getrennt in `~/.lernstudio-vault.git`), legt deinen
 Zugangsschlüssel in den macOS-Schlüsselbund und richtet einen Hintergrund-Job ein, der alle 2 Minuten abgleicht: was du in
 Obsidian schreibst, geht zu GitHub (Lernstudio, Claude); was dort neu ist, kommt in Obsidian an. Nie Force-Push, bei Konflikten
-bricht der Abgleich ab (Log: `~/Library/Logs/uni-knowledge-sync.log`). In Obsidian dann „Open folder as vault“ → `~/Uni`.
+bricht der Abgleich ab (Log: `~/Library/Logs/uni-knowledge-sync.log`). Außerdem holt es die Obsidian-Erweiterungen fürs
+Dashboard (Dataview, Homepage, 3D Graph) und das Theme Minimal aus deren GitHub-Releases; die Einstellungen dafür liegen schon
+im Vault, die Programmdateien bleiben aus dem Repo heraus. In Obsidian dann „Open folder as vault“ → `~/Uni` →
+„Trust author and enable plugins“.
 
 Abschalten: `launchctl unload ~/Library/LaunchAgents/local.uni-knowledge-sync.plist`
 

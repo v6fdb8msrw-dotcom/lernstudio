@@ -128,7 +128,8 @@ export default function SettingsPage() {
           </button>
         </div>
         <ul className="plain-list muted small">
-          <li>Der Vault landet in deinem Benutzerordner unter „Uni“. In Obsidian: „Open folder as vault“ → diesen Ordner.</li>
+          <li>Der Vault landet in deinem Benutzerordner unter „Uni“. In Obsidian: „Open folder as vault“ → diesen Ordner → „Trust author and enable plugins“.</li>
+          <li>Dashboard-Erweiterungen (Dataview, Homepage) und das Theme holt der Befehl gleich mit – nichts von Hand installieren.</li>
           <li>Alle 2 Minuten gleicht der Mac im Hintergrund ab: Was du in Obsidian schreibst, erscheint hier; was du hier anlegst, erscheint in Obsidian.</li>
           <li>Screenshots mit ⌘⇧4 und dann ⌘V in die Notiz, Foliensätze einfach reinziehen – in Obsidian wie hier.</li>
         </ul>
