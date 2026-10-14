@@ -39,6 +39,8 @@ export interface Vault {
 
 const EMPTY_MODEL = buildModel([], new Map())
 const TODOS = 'wiki/dashboard/todos.md'
+/** Wie oft die offene App bei GitHub nach Neuem schaut (ein kleiner Abruf, wenn sich nichts geändert hat). */
+const POLL_MS = 60_000
 
 const VaultContext = createContext<Vault | null>(null)
 
@@ -166,15 +168,20 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     }
   }, [cache, rebuild, refreshPending, sync])
 
-  // Wieder online oder App wieder im Vordergrund: abgleichen
+  // Wieder online, App wieder im Vordergrund und jede Minute, solange sie sichtbar ist: abgleichen.
+  // So erscheint, was in Obsidian geschrieben wurde (der Mac schickt es alle 2 Minuten zu GitHub), von selbst.
   useEffect(() => {
     const on = () => {
-      if (configRef.current && document.visibilityState === 'visible') void sync()
+      if (configRef.current && document.visibilityState === 'visible' && navigator.onLine !== false) void sync()
     }
+    const timer = window.setInterval(on, POLL_MS)
     window.addEventListener('online', on)
+    window.addEventListener('focus', on)
     document.addEventListener('visibilitychange', on)
     return () => {
+      window.clearInterval(timer)
       window.removeEventListener('online', on)
+      window.removeEventListener('focus', on)
       document.removeEventListener('visibilitychange', on)
     }
   }, [sync])

@@ -712,3 +712,55 @@ a.exam-card:hover {
   border-radius: 16px;
   background: var(--surface-2);
 }
+
+/* ---------- Graph-Ansicht (wie Obsidian) ---------- */
+
+.graph-view {
+  position: relative;
+  height: 440px;
+  border-radius: var(--radius);
+  background: #ffffff;
+  border: 1px solid var(--line);
+  overflow: hidden;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.graph-view canvas {
+  display: block;
+}
+
+.graph-view-full {
+  height: max(480px, calc(100dvh - 260px));
+  touch-action: none;
+}
+
+.graph-view-expand {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.graph-view-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+}
+
+.graph-card {
+  padding-bottom: 16px;
+}
+
+@media (max-width: 760px) {
+  .graph-view {
+    height: 340px;
+  }
+
+  .graph-view-full {
+    height: max(420px, calc(100dvh - 220px));
+  }
+}

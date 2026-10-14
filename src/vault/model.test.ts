@@ -4,6 +4,7 @@ import { canEditInApp, sanitize, toMarkdown } from '../lib/html'
 import { applyEdit } from './edits'
 import { splitFrontmatter } from './frontmatter'
 import { renderMarkdown } from './markdown'
+import { buildGraph, matcher, parseGraphSettings } from './graph'
 import { buildModel, classifyRaw, oneLiner, parseLog, parseSemesterConfig, parseSubjectsConfig, parseTodos, rawPath, readiness, resolveLink, statusCounts } from './model'
 
 // Ausschnitt aus wiki/dashboard/home.md des uni-knowledge-template
@@ -249,5 +250,57 @@ describe('Mitschrift-Editor und Foliensätze', () => {
     expect(canEditInApp('Formel $B_0 = R / i$')).toBe(false)
     expect(canEditInApp('Siehe [[Varianz]]')).toBe(false)
     expect(canEditInApp('- oben\n    - eingerückt')).toBe(false)
+  })
+})
+
+describe('Graph-Ansicht wie in Obsidian', () => {
+  const files: Record<string, string> = {
+    '.obsidian/graph.json': JSON.stringify({
+      search: '-path:raw -file:log',
+      showOrphans: false,
+      hideUnresolved: false,
+      colorGroups: [{ query: 'path:wiki/sources', color: { a: 1, rgb: 13621468 } }, { query: '[cross_subject:true]', color: { a: 1, rgb: 16635957 } }],
+      linkDistance: 30,
+    }),
+    'wiki/concepts/wacc.md': '---\ntitle: WACC\ncross_subject: true\n---\nSiehe [[capm|CAPM]], ![[bild.png]] und [Quelle](../sources/oehlrich.md).\n```js\n[[im-code]]\n```\n[[Fehlt noch]]',
+    'wiki/concepts/capm.md': '# CAPM\n\n| Thema | Link |\n|---|---|\n| WACC | [[wiki/concepts/wacc\\|WACC]] |',
+    'wiki/sources/oehlrich.md': '# Oehlrich',
+    'wiki/concepts/allein.md': 'kein Link',
+    'raw/notes/mitschrift.md': '[[wacc]]',
+    'log.md': '[[wacc]]',
+  }
+  const paths = [...Object.keys(files), 'raw/assets/bild.png']
+  const texts = new Map(Object.entries(files))
+  const model = buildModel(paths.map((path) => ({ path, sha: path, size: 1 })), texts)
+
+  it('übernimmt Filter, Waisen, unaufgelöste Links und Farbgruppen aus graph.json', () => {
+    const g = model.graph
+    const label = (i: number) => g.nodes[i].label
+    expect(g.nodes.map((n) => n.label).sort()).toEqual(['Fehlt noch', 'capm', 'oehlrich', 'wacc'])
+    expect(g.edges.map((e) => [label(e.a), label(e.b)].sort().join('–')).sort()).toEqual(['Fehlt noch–wacc', 'capm–wacc', 'oehlrich–wacc'])
+    expect(g.nodes.find((n) => n.label === 'oehlrich')?.color).toBe('#cfd8dc')
+    expect(g.nodes.find((n) => n.label === 'wacc')?.color).toBe('#fdd835')
+    expect(g.nodes.find((n) => n.label === 'Fehlt noch')?.kind).toBe('unresolved')
+    expect(g.nodes.find((n) => n.label === 'wacc')?.weight).toBe(3)
+    expect(g.settings.linkDistance).toBe(30)
+  })
+
+  it('zeigt Anhänge und Waisen nur, wenn Obsidian sie zeigt', () => {
+    const g = buildGraph({ paths, texts, resolve: (t) => resolveLink(model, t), settingsJson: JSON.stringify({ showAttachments: true, showOrphans: true, hideUnresolved: true }) })
+    const labels = g.nodes.map((n) => n.label)
+    expect(labels).toContain('bild.png')
+    expect(labels).toContain('allein')
+    expect(labels).toContain('mitschrift')
+    expect(labels).not.toContain('Fehlt noch')
+  })
+
+  it('versteht die Obsidian-Suche (path:, file:, Eigenschaften, Minus)', () => {
+    const f = { path: 'wiki/concepts/wacc.md', name: 'wacc.md', text: 'Kapitalkosten', props: { cross_subject: true, tags: ['fiwi'] }, tags: ['fiwi'] }
+    expect(matcher('-path:raw')(f)).toBe(true)
+    expect(matcher('path:wiki/concepts file:wacc')(f)).toBe(true)
+    expect(matcher('-file:wacc')(f)).toBe(false)
+    expect(matcher('[cross_subject:true]')(f)).toBe(true)
+    expect(matcher('tag:#fiwi kapitalkosten')(f)).toBe(true)
+    expect(parseGraphSettings('kaputt').linkDistance).toBe(250)
   })
 })

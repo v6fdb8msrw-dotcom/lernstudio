@@ -1,6 +1,7 @@
 import { ArrowUpRight, BookA, Check, NotebookPen, Plus, Search, Settings2, Sparkles, Upload } from 'lucide-react'
 import { useMemo, useState, type CSSProperties } from 'react'
 import { BrandMark } from '../components/BrandMark'
+import { KnowledgeGraph } from '../components/KnowledgeGraph'
 import { useClock } from '../components/hooks'
 import { SyncBadge } from '../components/SyncBadge'
 import { ExamPill, Notice, StatusBar, SubjectBadge } from '../components/ui'
@@ -152,6 +153,16 @@ export function Home() {
           <a href={href('/claude')}>Zu den Befehlen</a>
         </Notice>
       )}
+
+      <section className="card graph-card">
+        <div className="section-head">
+          <h2>Graph-Ansicht</h2>
+          <a className="muted small" href={href('/netz')}>
+            Vollbild
+          </a>
+        </div>
+        <KnowledgeGraph graph={model.graph} mode="preview" />
+      </section>
 
       <section>
         <div className="section-head">

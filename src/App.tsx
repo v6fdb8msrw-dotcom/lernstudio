@@ -16,6 +16,7 @@ const MitschriftPage = lazy(() => import('./pages/Mitschrift'))
 const TodosPage = lazy(() => import('./pages/Todos'))
 const ClaudePage = lazy(() => import('./pages/Claude'))
 const SettingsPage = lazy(() => import('./pages/Settings'))
+const GraphPage = lazy(() => import('./pages/Graph'))
 
 function Page({ route }: { route: Route }) {
   switch (route.segments[0]) {
@@ -39,6 +40,8 @@ function Page({ route }: { route: Route }) {
       return <ClaudePage route={route} />
     case 'einstellungen':
       return <SettingsPage />
+    case 'netz':
+      return <GraphPage />
     default:
       return <Home />
   }

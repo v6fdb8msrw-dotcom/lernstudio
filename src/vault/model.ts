@@ -1,5 +1,6 @@
 import { CONCEPT_STATUSES, type Concept, type ConceptStatus, type LogEntry, type RawFile, type RawKind, type Semester, type Subject, type SubjectStatus, type Todo, type TreeEntry } from '../types'
 import { asDate, asList, splitFrontmatter } from './frontmatter'
+import { buildGraph, type Graph } from './graph'
 
 /*
  * Liest den Vault (Schema aus CLAUDE.md des uni-knowledge-template) in ein Modell für die App.
@@ -27,6 +28,8 @@ export interface VaultModel {
   markdown: string[]
   /** Noch Platzhalter aus dem Template drin? Dann ist die Erst-Einrichtung offen. */
   needsSetup: boolean
+  /** Wissensnetz (Fächer, Concepts, Mitschriften, Links) */
+  graph: Graph
 }
 
 export const SUBJECT_PALETTE = ['#b08a4a', '#5b84b1', '#5f9473', '#cd7f4a', '#c46a8a', '#8571b5', '#3f8e93', '#bd5a50']
@@ -337,6 +340,8 @@ export function buildModel(entries: TreeEntry[], texts: Map<string, string>): Va
   subjects.push(...subjectsFromFolders(raw, slugSet, subjects))
   const needsSetup = /\[TODO/.test(texts.get('CLAUDE.md') ?? '') || subjects.some((s) => s.slug.startsWith('beispiel-fach'))
 
+  const graph = buildGraph({ paths: entries.map((e) => e.path), texts, resolve: (t) => resolveLink({ links }, t), settingsJson: texts.get(GRAPH_SETTINGS) })
+
   return {
     semester,
     subjects,
@@ -349,6 +354,7 @@ export function buildModel(entries: TreeEntry[], texts: Map<string, string>): Va
     links,
     markdown,
     needsSetup,
+    graph,
   }
 }
 
@@ -398,11 +404,12 @@ export function rawPath(subject: Subject, kind: RawKind, fileName: string, fallb
   return ['raw', sem, subject.slug, kind, safe].filter(Boolean).join('/')
 }
 
-/** Welche Dateien die App als Text lädt (alles, was sie darstellt oder auswertet). */
+/** Obsidians Einstellungen für die Graph-Ansicht (Filter, Farbgruppen, Kräfte). */
+export const GRAPH_SETTINGS = '.obsidian/graph.json'
+
+/** Welche Dateien die App als Text lädt: alle Notizen (für Suche und Graph-Ansicht) und die Graph-Einstellungen. */
 export function wantsText(path: string): boolean {
-  if (!path.endsWith('.md')) return false
-  if (path.startsWith('wiki/_templates/')) return false
-  return path.startsWith('wiki/') || ['index.md', 'log.md', 'CLAUDE.md', 'commands.md'].includes(path)
+  return path === GRAPH_SETTINGS || (path.toLowerCase().endsWith('.md') && !path.startsWith('.'))
 }
 
 export function mimeFor(path: string): string {

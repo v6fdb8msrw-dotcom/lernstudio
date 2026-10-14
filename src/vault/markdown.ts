@@ -26,7 +26,8 @@ const wikilink: TokenizerAndRendererExtension = {
     const m = src.match(/^(!?)\[\[([^\]\n]+?)\]\]/)
     if (!m) return undefined
     const [target, alias] = m[2].split('|')
-    return { type: 'wikilink', raw: m[0], embed: m[1] === '!', target: target.trim(), alias: alias?.trim() }
+    // In Tabellen steht der Trenner als \| – das gehört nicht zum Ziel
+    return { type: 'wikilink', raw: m[0], embed: m[1] === '!', target: target.replace(/\\$/, '').trim(), alias: alias?.trim() }
   },
   renderer(token) {
     const t = token as unknown as { embed: boolean; target: string; alias?: string }

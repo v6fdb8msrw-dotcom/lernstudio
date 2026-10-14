@@ -1,4 +1,4 @@
-import { ArrowLeft, BookA, Plus, RefreshCw, Search, Settings2, Sparkles, Upload } from 'lucide-react'
+import { ArrowLeft, BookA, Plus, RefreshCw, Search, Settings2, Sparkles, Upload, Waypoints } from 'lucide-react'
 import { useEffect, useRef, type ReactNode } from 'react'
 import { href, type Route } from '../state/router'
 import { BrandMark } from './BrandMark'
@@ -7,6 +7,7 @@ import { useUi } from './UiContext'
 
 const NAV = [
   { path: '/begriffe', label: 'Begriffe', icon: BookA },
+  { path: '/netz', label: 'Netz', icon: Waypoints },
   { path: '/suche', label: 'Suche', icon: Search },
   { path: '/hochladen', label: 'Hochladen', icon: Upload },
   { path: '/claude', label: 'Claude', icon: Sparkles },

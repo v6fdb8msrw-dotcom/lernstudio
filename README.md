@@ -22,9 +22,12 @@ React · TypeScript · Vite · IndexedDB · installierbare PWA. Komplett kostenl
 | **Concept-Ansicht** | Obsidian-Markdown mit `[[Wikilinks]]`, eingebetteten Bildern, Callouts, aufklappbaren Selbsttest-Fragen, „Verlinkt von“, Knopf „In Obsidian öffnen“ und „Mit Claude besprechen“ (erklären, abfragen, zusammenfassen …). |
 | **Suche** | Volltext über alle Notes im Vault und die Namen deiner hochgeladenen Dateien. |
 | **Hochladen** | Viele Dateien auf einmal oder ganze Ordner (am Mac). Sie landen in `raw/<Semester>/<Fach>/<slides|notes|books|papers|videos>/`, alles in einem Commit. Danach steht der passende Befehl für Claude Code zum Kopieren bereit. YouTube-Links werden als `.txt` abgelegt. |
+| **Graph-Ansicht** | Die Graph-Ansicht aus Obsidian mittig auf der Startseite (und im Vollbild unter „Netz“): jede Notiz ein Knoten, jeder Link eine Linie. Filter, Farbgruppen, Kräfte, Knotengröße, Waisen und unaufgelöste Links kommen aus `.obsidian/graph.json`, also genau so, wie du sie in Obsidian einstellst. Ziehen, Zoomen (⌘ + Scrollen bzw. Pinch), Antippen öffnet die Notiz. |
 | **Mitschrift** | Schreiben wie in Notion, mit Überschriften, Listen, Markierungen und Fotos. Screenshots mit ⌘V, Fotos und Foliensätze (PDF, PowerPoint, Keynote) per Knopf oder Drag & Drop. **Speichert automatisch** (nach kurzer Tipp-Pause, spätestens alle 45 s und beim Verlassen) als Markdown in `raw/…/notes/`; Fotos landen in `raw/assets/`, Foliensätze sofort in `raw/…/slides/` und stehen als `![[…]]` in der Mitschrift. Notizen mit Kästen, Tabellen oder Formeln (z. B. aus Notion) bearbeitest du in Obsidian, die App zeigt sie nur an. |
 | **Todos** | Liest und schreibt `wiki/dashboard/todos.md`: abhaken und neue anlegen. Gelöscht wird nie etwas, und die Format-Kommentare für Claude bleiben stehen. |
 | **Claude** | Claude Chat öffnet claude.ai mit deiner Frage (optional mit den Begriffen eines Fachs als Kontext). Claude Code: alle Befehle aus `commands.md` zum Ausfüllen, Kopieren und Öffnen. |
+
+**Automatischer Abgleich:** Solange die App offen ist, schaut sie jede Minute bei GitHub nach Neuem (und sofort, wenn du zu ihr zurückkehrst). Was du in Obsidian schreibst, schickt der Mac alle 2 Minuten zu GitHub, es erscheint also nach spätestens etwa 3 Minuten hier. Was du hier anlegst, geht sofort zu GitHub und ist nach spätestens 2 Minuten in Obsidian.
 
 **Offline:** Alles, was einmal geladen wurde, bleibt auf dem Gerät. Uploads, Mitschriften und Todos, die du offline machst, wartet die App ab und schickt sie, sobald du wieder online bist.
 
@@ -92,7 +95,7 @@ Abschalten: `launchctl unload ~/Library/LaunchAgents/local.uni-knowledge-sync.pl
 1. Folien nach der Vorlesung: **Hochladen** → Fach → *Folien* → Dateien.
 2. Mitschrift: **Mitschrift** → Fach → schreiben, Fotos rein → *Speichern*.
 3. Den angezeigten Befehl kopieren und in Claude Code einfügen (Mac: Claude Code im Vault-Ordner, unterwegs: claude.ai/code mit dem Vault-Repo).
-4. Claude baut Concept-Notes und pusht. Der Lernstudio zeigt sie nach dem nächsten Abgleich (oben rechts, oder automatisch beim Öffnen).
+4. Claude baut Concept-Notes und pusht. Der Lernstudio zeigt sie nach dem nächsten Abgleich (automatisch jede Minute, oder oben rechts von Hand).
 5. Vor der Klausur: „Exam Mode für <Fach>“ in Claude Code → Klausur-Hub und Lernplan erscheinen im Fach unter *Klausur*.
 
 ---
