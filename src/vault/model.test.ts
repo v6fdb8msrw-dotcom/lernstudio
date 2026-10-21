@@ -285,6 +285,16 @@ describe('Graph-Ansicht wie in Obsidian', () => {
     expect(g.settings.linkDistance).toBe(30)
   })
 
+  it('vergrößert Fach-Seiten per node_size, wenn das Plugin in Obsidian aktiv ist', () => {
+    const t = new Map(texts)
+    t.set('wiki/concepts/capm.md', '---\nnode_size: 80\n---\n# CAPM\n[[wacc]]')
+    const off = buildGraph({ paths, texts: t, resolve: (x) => resolveLink(model, x), settingsJson: files['.obsidian/graph.json'] })
+    const on = buildGraph({ paths, texts: t, resolve: (x) => resolveLink(model, x), settingsJson: files['.obsidian/graph.json'], pluginsJson: '["dataview","uni-hub-size"]' })
+    expect(off.nodes.find((n) => n.label === 'capm')?.size).toBeUndefined()
+    expect(on.nodes.find((n) => n.label === 'capm')?.size).toBe(80)
+    expect(on.nodes.find((n) => n.label === 'wacc')?.size).toBeUndefined()
+  })
+
   it('zeigt Anhänge und Waisen nur, wenn Obsidian sie zeigt', () => {
     const g = buildGraph({ paths, texts, resolve: (t) => resolveLink(model, t), settingsJson: JSON.stringify({ showAttachments: true, showOrphans: true, hideUnresolved: true }) })
     const labels = g.nodes.map((n) => n.label)
@@ -301,6 +311,9 @@ describe('Graph-Ansicht wie in Obsidian', () => {
     expect(matcher('-file:wacc')(f)).toBe(false)
     expect(matcher('[cross_subject:true]')(f)).toBe(true)
     expect(matcher('tag:#fiwi kapitalkosten')(f)).toBe(true)
+    expect(matcher('path:raw OR [cross_subject:true]')(f)).toBe(true)
+    expect(matcher('path:raw OR file:nein')(f)).toBe(false)
+    expect(matcher('path:fiwi OR [subjects:fiwi] OR [subject:fiwi]')({ ...f, props: { subjects: ['fiwi', 'rewe'] } })).toBe(true)
     expect(parseGraphSettings('kaputt').linkDistance).toBe(250)
   })
 })

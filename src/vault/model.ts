@@ -340,7 +340,7 @@ export function buildModel(entries: TreeEntry[], texts: Map<string, string>): Va
   subjects.push(...subjectsFromFolders(raw, slugSet, subjects))
   const needsSetup = /\[TODO/.test(texts.get('CLAUDE.md') ?? '') || subjects.some((s) => s.slug.startsWith('beispiel-fach'))
 
-  const graph = buildGraph({ paths: entries.map((e) => e.path), texts, resolve: (t) => resolveLink({ links }, t), settingsJson: texts.get(GRAPH_SETTINGS) })
+  const graph = buildGraph({ paths: entries.map((e) => e.path), texts, resolve: (t) => resolveLink({ links }, t), settingsJson: texts.get(GRAPH_SETTINGS), pluginsJson: texts.get(OBSIDIAN_PLUGINS) })
 
   return {
     semester,
@@ -406,10 +406,12 @@ export function rawPath(subject: Subject, kind: RawKind, fileName: string, fallb
 
 /** Obsidians Einstellungen für die Graph-Ansicht (Filter, Farbgruppen, Kräfte). */
 export const GRAPH_SETTINGS = '.obsidian/graph.json'
+/** Aktive Obsidian-Plugins (für Knotengrößen per node_size). */
+export const OBSIDIAN_PLUGINS = '.obsidian/community-plugins.json'
 
 /** Welche Dateien die App als Text lädt: alle Notizen (für Suche und Graph-Ansicht) und die Graph-Einstellungen. */
 export function wantsText(path: string): boolean {
-  return path === GRAPH_SETTINGS || (path.toLowerCase().endsWith('.md') && !path.startsWith('.'))
+  return path === GRAPH_SETTINGS || path === OBSIDIAN_PLUGINS || (path.toLowerCase().endsWith('.md') && !path.startsWith('.'))
 }
 
 export function mimeFor(path: string): string {

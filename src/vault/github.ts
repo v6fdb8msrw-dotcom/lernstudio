@@ -101,6 +101,17 @@ export class GitHubClient {
     return base64ToBytes(await this.blobBase64(sha))
   }
 
+  /** Gibt es die Datei in diesem Stand? */
+  async existsAt(path: string, ref: string): Promise<boolean> {
+    try {
+      await this.req(`/contents/${encodePath(path)}?ref=${encodeURIComponent(ref)}`)
+      return true
+    } catch (e) {
+      if (e instanceof GitHubError && e.status === 404) return false
+      throw e
+    }
+  }
+
   /** Textinhalt einer Datei in einem bestimmten Stand, undefined wenn es sie nicht gibt. */
   async textAt(path: string, ref: string): Promise<string | undefined> {
     try {
@@ -134,7 +145,8 @@ export class GitHubClient {
       const head = await this.headSha()
       const headCommit = await this.req<{ tree: { sha: string } }>(`/git/commits/${head}`)
       const tree: { path: string; mode: string; type: string; sha: string | null }[] = [...blobShas].map(([path, sha]) => ({ path, mode: '100644', type: 'blob', sha }))
-      for (const path of opts.deletes ?? []) tree.push({ path, mode: '100644', type: 'blob', sha: null })
+      // Nur löschen, was es auf dem Branch gibt (sonst lehnt GitHub den ganzen Commit ab)
+      for (const path of opts.deletes ?? []) if (!blobShas.has(path) && (await this.existsAt(path, head))) tree.push({ path, mode: '100644', type: 'blob', sha: null })
       if (opts.edit && opts.editPaths?.length) {
         for (const path of opts.editPaths) {
           const text = await this.textAt(path, head)

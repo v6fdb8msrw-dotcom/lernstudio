@@ -44,7 +44,7 @@ function layout(graph: Graph, positions: Map<string, SimNode>) {
   let fresh = 0
   const nodes: SimNode[] = graph.nodes.map((n) => {
     // Größe wie in Obsidian: wächst mit der Wurzel der Linkanzahl, begrenzt
-    const r = s.nodeSizeMultiplier * Math.max(8, Math.min(3 * Math.sqrt(n.weight + 1), 30)) * 0.6
+    const r = s.nodeSizeMultiplier * Math.max(8, Math.min(3 * Math.sqrt((n.size ?? n.weight) + 1), 30)) * 0.6
     let p = positions.get(n.id)
     if (!p) {
       const a = hash(n.id) * Math.PI * 2

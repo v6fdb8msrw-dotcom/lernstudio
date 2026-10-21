@@ -31,7 +31,7 @@ export interface Vault {
   textNow(path: string): string | undefined
   fileUrl(path: string): Promise<string | undefined>
   fileBlob(path: string): Promise<Blob | undefined>
-  write(message: string, files: { path: string; content: Blob | string }[], edits?: ({ path: string } & EditOp)[]): Promise<'sent' | 'queued'>
+  write(message: string, files: { path: string; content: Blob | string }[], edits?: ({ path: string } & EditOp)[], deletes?: string[]): Promise<'sent' | 'queued'>
   toggleTodo(title: string): Promise<void>
   addTodo(todo: Todo): Promise<void>
   exists(path: string): boolean
@@ -76,6 +76,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       await gh.commit({
         message: item.message,
         files: item.files,
+        deletes: item.deletes,
         editPaths: [...new Set(edits.map((e) => e.path))],
         edit: (path, current) => edits.filter((e) => e.path === path).reduce<string | undefined>((t, e) => applyEdit(t, { op: e.op, arg: e.arg } as EditOp), current),
       })
@@ -269,13 +270,18 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   )
 
   const write = useCallback(
-    async (message: string, files: { path: string; content: Blob | string }[], edits: ({ path: string } & EditOp)[] = []): Promise<'sent' | 'queued'> => {
+    async (message: string, files: { path: string; content: Blob | string }[], edits: ({ path: string } & EditOp)[] = [], deletes: string[] = []): Promise<'sent' | 'queued'> => {
       const item: OutboxItem = {
         id: uid(),
         message,
         createdAt: nowIso(),
         files: await Promise.all(files.map(async (f) => ({ path: f.path, base64: typeof f.content === 'string' ? textToBase64(f.content) : await blobToBase64(f.content) }))),
         edits: edits.map((e) => ({ path: e.path, op: e.op, arg: e.arg })),
+        ...(deletes.length ? { deletes } : {}),
+      }
+      for (const d of deletes) {
+        entries.current.delete(d)
+        texts.current.delete(d)
       }
       // Sofort lokal sichtbar machen (Texte und Bäume), bis der nächste Abgleich die echten SHAs bringt
       for (const f of files) {

@@ -51,6 +51,8 @@ export interface GraphNode {
   color?: string
   /** Anzahl Links (ein- und ausgehend), bestimmt die Größe wie in Obsidian */
   weight: number
+  /** Feste Größe aus der Eigenschaft node_size (Plugin „Uni Hub Size“), statt der Linkanzahl */
+  size?: number
   /** Adresse in der App (fehlt bei unaufgelösten Links und Tags) */
   to?: string
 }
@@ -148,10 +150,15 @@ function term(tok: string): Term {
   return { neg, test: (f) => f.name.toLowerCase().includes(value) || f.text.toLowerCase().includes(value) }
 }
 
+/** Obsidian-Suche: Begriffe mit Leerzeichen müssen alle passen, „OR“ trennt Alternativen. */
 export function matcher(query: string): (f: FileInfo) => boolean {
-  const terms = tokens(query.trim()).map(term)
-  if (!terms.length) return () => true
-  return (f) => terms.every((t) => t.test(f) !== t.neg)
+  const alternatives = query
+    .trim()
+    .split(/\s+OR\s+/)
+    .map((part) => tokens(part).map(term))
+    .filter((terms) => terms.length)
+  if (!alternatives.length) return () => true
+  return (f) => alternatives.some((terms) => terms.every((t) => t.test(f) !== t.neg))
 }
 
 // ── Links wie Obsidian sie zählt ──
@@ -185,6 +192,16 @@ function tagsOf(text: string, props: Record<string, unknown>): string[] {
   return [...new Set(list)]
 }
 
+/** Ist ein Plugin aktiv, das Knoten per node_size vergrößert (unser „Uni Hub Size“ oder „Custom Node Size“)? */
+function hubSizePlugin(json: string | undefined): boolean {
+  try {
+    const list: unknown = JSON.parse(json ?? '[]')
+    return Array.isArray(list) && list.some((id) => id === 'uni-hub-size' || id === 'custom-node-size')
+  } catch {
+    return false
+  }
+}
+
 const stem = (path: string) => (path.split('/').pop() ?? path).replace(/\.md$/i, '')
 
 export function buildGraph(input: {
@@ -193,8 +210,11 @@ export function buildGraph(input: {
   texts: Map<string, string>
   resolve: (target: string) => string | undefined
   settingsJson?: string
+  /** .obsidian/community-plugins.json: welche Plugins in Obsidian aktiv sind */
+  pluginsJson?: string
 }): Graph {
   const settings = parseGraphSettings(input.settingsJson)
+  const sized = hubSizePlugin(input.pluginsJson)
   const { texts, resolve } = input
   const notes = input.paths.filter((p) => p.toLowerCase().endsWith('.md') && !p.startsWith('.'))
   const info = new Map<string, FileInfo>()
@@ -221,7 +241,8 @@ export function buildGraph(input: {
   for (const p of notes) {
     const f = info.get(p)!
     if (!visible(f)) continue
-    add({ id: p, label: stem(p), kind: 'file', color: groups.find((g) => g.test(f))?.color, to: `/n/${encodeURIComponent(p)}` })
+    const size = sized ? Number(f.props.node_size) : NaN
+    add({ id: p, label: stem(p), kind: 'file', color: groups.find((g) => g.test(f))?.color, to: `/n/${encodeURIComponent(p)}`, ...(size > 0 ? { size } : {}) })
   }
 
   const edges: { a: number; b: number }[] = []

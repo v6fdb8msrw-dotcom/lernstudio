@@ -57,6 +57,13 @@ function today(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+/** Fach aus dem Pfad (raw/<Sem>/<fach>/… oder raw/archive-upload/<Sem>/<fach>/…). */
+function slugFromPath(p: string): string {
+  const parts = p.split('/')
+  const rest = parts[1] === 'archive-upload' ? parts.slice(2) : parts.slice(1)
+  return rest.length >= 3 ? rest[1] : ''
+}
+
 function clock(d: Date): string {
   return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
 }
@@ -71,7 +78,10 @@ export default function MitschriftPage({ route }: { route: Route }) {
   const { model } = vault
   const { toast } = useToast()
   const editPath = route.query.get('pfad') ?? undefined
-  const [slug, setSlug] = useState(route.query.get('fach') ?? model.subjects.find((s) => s.active)?.slug ?? '')
+  // Kein stilles Standard-Fach: sonst landen Notizen unbemerkt im falschen Ordner
+  const [slug, setSlug] = useState(route.query.get('fach') ?? (editPath ? slugFromPath(editPath) : ''))
+  const [allSubjects, setAllSubjects] = useState(false)
+  const [hasContent, setHasContent] = useState(false)
   const [title, setTitle] = useState('')
   const [initial, setInitial] = useState<string>()
   const [blocked, setBlocked] = useState(false)
@@ -91,13 +101,14 @@ export default function MitschriftPage({ route }: { route: Route }) {
   const timer = useRef<number | undefined>(undefined)
   const draftTimer = useRef<number | undefined>(undefined)
   const queue = useRef<Promise<void>>(Promise.resolve())
+  /** In dieser Sitzung neu angelegt: Dateiname folgt dem Titel (vorher hat Claude noch nicht darauf verlinkt) */
+  const autoNamed = useRef(false)
   // Aktuelle Werte für Speichern aus Timern und beim Verlassen (die sehen sonst alte Closures)
   const live = useRef({ vault, model, slug, title, path })
   live.current = { vault, model, slug, title, path }
 
-  const subjectFor = (p: string | undefined, s: string): Subject | undefined =>
-    p ? live.current.model.subjects.find((x) => p.includes(`/${x.slug}/`)) : live.current.model.subjects.find((x) => x.slug === s)
-  const subject = subjectFor(path, slug)
+  const subjectFor = (s: string): Subject | undefined => live.current.model.subjects.find((x) => x.slug === s)
+  const subject = subjectFor(slug)
 
   // Bestehende Mitschrift laden
   useEffect(() => {
@@ -154,6 +165,7 @@ export default function MitschriftPage({ route }: { route: Route }) {
   function changed() {
     version.current++
     firstDirty.current ??= Date.now()
+    setHasContent(true)
     setStatus((s) => (s.kind === 'waiting' || s.kind === 'saving' ? s : { kind: 'waiting' }))
     if (!live.current.path) {
       window.clearTimeout(draftTimer.current)
@@ -178,9 +190,10 @@ export default function MitschriftPage({ route }: { route: Route }) {
     return run
   }
 
-  function uniquePath(p: string): string {
+  /** Freier Dateiname (die eigene, aktuelle Datei zählt nicht als belegt). */
+  function uniquePath(p: string, own?: string): string {
     const { vault, model } = live.current
-    const taken = (x: string) => vault.exists(x) || model.raw.some((r) => r.name === basename(x))
+    const taken = (x: string) => x !== own && (vault.exists(x) || model.raw.some((r) => r.path !== own && r.name === basename(x)))
     if (!taken(p)) return p
     const dot = p.lastIndexOf('.')
     for (let i = 2; ; i++) {
@@ -193,7 +206,7 @@ export default function MitschriftPage({ route }: { route: Route }) {
     const v = version.current
     if (v === savedVersion.current && mode !== 'manual') return
     const { vault, model, slug, title, path: current } = live.current
-    const subj = subjectFor(current, slug)
+    const subj = subjectFor(slug)
     if (!subj) {
       if (mode === 'manual') toast('Wähl zuerst ein Fach.', 'error')
       setStatus({ kind: 'idle' })
@@ -202,36 +215,59 @@ export default function MitschriftPage({ route }: { route: Route }) {
     const html = api.current?.html() ?? ''
     const text = toMarkdown(html)
     const name = title.trim() || 'Mitschrift'
-    // Neue, noch leere Mitschrift nicht als leere Datei anlegen
-    if (!current && !title.trim() && !text.trim()) {
+    // Neue Mitschrift erst anlegen, wenn wirklich Text da ist (nur ein Titel ergibt sonst leere Dateien)
+    if (!current && !text.trim()) {
+      if (mode === 'manual') toast('Schreib zuerst etwas, dann wird gespeichert.', 'error')
       setStatus({ kind: 'idle' })
       return
     }
-    const target = current ?? uniquePath(rawPath(subj, 'notes', `${today()} ${name}.md`, model.semester?.folder))
+    const semester = subj.semFolder || model.semester?.folder || ''
+    let target: string
+    const deletes: string[] = []
+    if (!current) {
+      target = uniquePath(rawPath(subj, 'notes', `${today()} ${name}.md`, model.semester?.folder))
+    } else {
+      // Umziehen, wenn ein anderes Fach gewählt wurde oder der Titel einer neuen Mitschrift sich geändert hat
+      const moved = slugFromPath(current) !== subj.slug
+      const date = basename(current).match(/^\d{4}-\d{2}-\d{2}/)?.[0] ?? today()
+      const fileName = autoNamed.current ? basename(rawPath(subj, 'notes', `${date} ${name}.md`)) : basename(current)
+      const wanted = moved ? rawPath(subj, 'notes', fileName, model.semester?.folder) : `${current.slice(0, current.lastIndexOf('/'))}/${fileName}`
+      target = wanted === current ? current : uniquePath(wanted, current)
+      if (target !== current) deletes.push(current)
+    }
     const fm =
       fmRaw.current ||
-      [`title: ${JSON.stringify(name)}`, 'type: notes', `subject: ${subj.slug}`, `semester: ${subj.semFolder || model.semester?.folder || ''}`, `created: ${today()}`].join('\n')
+      [`title: ${JSON.stringify(name)}`, 'type: notes', `subject: ${subj.slug}`, `semester: ${semester}`, `created: ${today()}`].join('\n')
     const md = editFrontmatter(`---\n${fm}\n---\n\n# ${name}\n\n${text}\n`, (doc) => {
       if (doc.has('title')) doc.set('title', name)
+      if (doc.has('subject') && doc.get('subject') !== subj.slug) {
+        doc.set('subject', subj.slug)
+        if (doc.has('semester')) doc.set('semester', semester)
+      }
     })
     const images = imagesIn(html).filter((n) => pending.current.has(n) && !uploaded.current.has(n))
     setStatus({ kind: 'saving' })
     try {
-      const r = await vault.write(`Mitschrift: ${subj.label} – ${name}${mode === 'manual' ? '' : ' (automatisch)'}`, [
-        { path: target, content: md },
-        ...images.map((n) => ({ path: `raw/assets/${n}`, content: pending.current.get(n)!.blob })),
-      ])
+      const r = await vault.write(
+        `Mitschrift: ${subj.label} – ${name}${deletes.length ? ' (verschoben)' : mode === 'manual' ? '' : ' (automatisch)'}`,
+        [{ path: target, content: md }, ...images.map((n) => ({ path: `raw/assets/${n}`, content: pending.current.get(n)!.blob }))],
+        [],
+        deletes,
+      )
       for (const n of images) uploaded.current.add(n)
       fmRaw.current = splitFrontmatter(md).raw
       savedVersion.current = v
       if (version.current === v) firstDirty.current = undefined
       if (!current) {
+        autoNamed.current = true
+        window.clearTimeout(draftTimer.current)
+        writeDraft(undefined)
+      }
+      if (target !== current) {
         // Ab jetzt ist das diese Datei: Adresse merken (ohne Neuladen, damit der Cursor bleibt)
         live.current.path = target
         setPath(target)
         history.replaceState(null, '', `#/mitschrift?pfad=${encodeURIComponent(target)}`)
-        window.clearTimeout(draftTimer.current)
-        writeDraft(undefined)
       }
       setCommand(editPath ? `Mitschrift ${subj.label} aktualisiert` : `Mitschrift ${basename(target)} bereit zum Verarbeiten`)
       setStatus({ kind: 'saved', at: new Date(), queued: r === 'queued' })
@@ -261,7 +297,7 @@ export default function MitschriftPage({ route }: { route: Route }) {
 
   /** Foliensatz sofort in den slides-Ordner des Fachs legen und in der Mitschrift einbetten. */
   async function onFile(file: File) {
-    const subj = subjectFor(live.current.path, live.current.slug)
+    const subj = subjectFor(live.current.slug)
     if (!subj) {
       toast('Wähl zuerst ein Fach – die Folien kommen in seinen Ordner.', 'error')
       return undefined
@@ -361,23 +397,42 @@ export default function MitschriftPage({ route }: { route: Route }) {
         </Notice>
       )}
 
+      {!subject && hasContent && (
+        <Notice kind="warn">
+          <b>Noch kein Fach gewählt.</b> Tipp oben das Fach an – erst dann wird gespeichert. Bis dahin bleibt alles als Entwurf auf diesem Gerät.
+        </Notice>
+      )}
+
       <section className="card stack">
-        {!path && (
-          <Field label="Fach">
-            <div className="chip-row">
-              {model.subjects.map((s) => (
-                <button key={s.slug} type="button" className="chip subject-chip" aria-pressed={s.slug === slug} style={{ '--c': s.color } as CSSProperties} onClick={() => {
+        <Field label={path ? 'Fach (antippen verschiebt die Mitschrift)' : 'Fach'}>
+          <div className="chip-row">
+            {model.subjects
+              .filter((s) => allSubjects || s.active || s.slug === slug)
+              .map((s) => (
+                <button
+                  key={s.slug}
+                  type="button"
+                  className="chip subject-chip"
+                  aria-pressed={s.slug === slug}
+                  style={{ '--c': s.color } as CSSProperties}
+                  onClick={() => {
+                    if (s.slug === slug) return
                     setSlug(s.slug)
                     live.current.slug = s.slug
-                    if (version.current !== savedVersion.current) schedule()
+                    // Schon gespeichert: beim nächsten Speichern zieht die Datei ins neue Fach um
+                    if (live.current.path || version.current !== savedVersion.current) changed()
                   }}
                 >
                   <i /> {s.label}
                 </button>
               ))}
-            </div>
-          </Field>
-        )}
+            {model.subjects.some((s) => !s.active) && (
+              <button type="button" className="chip" aria-pressed={allSubjects} onClick={() => setAllSubjects((v) => !v)}>
+                {allSubjects ? 'Nur aktuelle Fächer' : 'Archiv …'}
+              </button>
+            )}
+          </div>
+        </Field>
         <input
           className="title-input"
           value={title}

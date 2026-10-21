@@ -106,4 +106,6 @@ export interface OutboxItem {
   files: { path: string; base64: string }[]
   /** Text-Änderungen, die beim Absenden auf den neuesten Stand angewendet werden (z. B. Todo abhaken) */
   edits?: { path: string; op: 'toggleTodo' | 'addTodo'; arg: string }[]
+  /** Dateien, die im selben Commit wegfallen (z. B. alte Adresse einer umgezogenen Mitschrift) */
+  deletes?: string[]
 }
