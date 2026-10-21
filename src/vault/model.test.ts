@@ -315,5 +315,10 @@ describe('Graph-Ansicht wie in Obsidian', () => {
     expect(matcher('path:raw OR file:nein')(f)).toBe(false)
     expect(matcher('path:fiwi OR [subjects:fiwi] OR [subject:fiwi]')({ ...f, props: { subjects: ['fiwi', 'rewe'] } })).toBe(true)
     expect(parseGraphSettings('kaputt').linkDistance).toBe(250)
+    // /…/ ist wie in Obsidian ein regulärer Ausdruck – auch über Leerzeichen hinweg
+    expect(matcher('path:/wiki\\/concepts/')(f)).toBe(true)
+    expect(matcher('-path:/raw/')(f)).toBe(true)
+    // Falle aus graph.json: „-path:/a.md -path:/b.md“ wird zu einem Regex plus dem Suchwort „b.md“ → fast nichts passt
+    expect(matcher('-path:/lernplan.md -path:/status.md')(f)).toBe(false)
   })
 })

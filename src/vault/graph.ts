@@ -108,7 +108,23 @@ interface FileInfo {
 type Term = { neg: boolean; test: (f: FileInfo) => boolean }
 
 function tokens(query: string): string[] {
-  return query.match(/-?(?:\[[^\]]*\]|[a-z-]+:"[^"]*"|"[^"]*"|\S+)/gi) ?? []
+  // Wie Obsidian: /…/ ist ein regulärer Ausdruck und darf Leerzeichen enthalten (auch nach path:, file: …)
+  return query.match(/-?(?:\[[^\]]*\]|(?:[a-z-]+:)?\/(?:\\.|[^/\\])*\/|[a-z-]+:"[^"]*"|"[^"]*"|\S+)/gi) ?? []
+}
+
+/** Suchwert prüfen: /regex/ wie in Obsidian, sonst Teilstring (ohne Groß/Klein). */
+function textTest(raw: string): (s: string) => boolean {
+  const re = raw.match(/^\/(.*)\/$/s)
+  if (re) {
+    try {
+      const r = new RegExp(re[1], 'i')
+      return (s) => r.test(s)
+    } catch {
+      return () => false
+    }
+  }
+  const v = unquote(raw).toLowerCase()
+  return (s) => s.toLowerCase().includes(v)
 }
 
 const unquote = (s: string) => s.replace(/^"(.*)"$/, '$1')
@@ -131,23 +147,25 @@ function term(tok: string): Term {
       },
     }
   }
-  const op = t.match(/^([a-z-]+):(.*)$/i)
-  const value = unquote(op ? op[2] : t).toLowerCase()
+  const op = t.match(/^([a-z-]+):([\s\S]*)$/i)
+  const raw = op ? op[2] : t
+  const value = unquote(raw).toLowerCase()
+  const has = textTest(raw)
   if (op) {
     switch (op[1].toLowerCase()) {
       case 'path':
-        return { neg, test: (f) => f.path.toLowerCase().includes(value) }
+        return { neg, test: (f) => has(f.path) }
       case 'file':
-        return { neg, test: (f) => f.name.toLowerCase().includes(value) }
+        return { neg, test: (f) => has(f.name) }
       case 'tag': {
         const tag = value.replace(/^#/, '')
         return { neg, test: (f) => f.tags.some((x) => x === tag || x.startsWith(`${tag}/`)) }
       }
       case 'content':
-        return { neg, test: (f) => f.text.toLowerCase().includes(value) }
+        return { neg, test: (f) => has(f.text) }
     }
   }
-  return { neg, test: (f) => f.name.toLowerCase().includes(value) || f.text.toLowerCase().includes(value) }
+  return { neg, test: (f) => has(f.name) || has(f.text) }
 }
 
 /** Obsidian-Suche: Begriffe mit Leerzeichen müssen alle passen, „OR“ trennt Alternativen. */
