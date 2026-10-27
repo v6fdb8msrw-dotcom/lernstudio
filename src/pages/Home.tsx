@@ -119,6 +119,16 @@ export function Home() {
         )}
       </div>
 
+      <section className="paper graph-card">
+        <div className="section-head">
+          <h2>Wissensnetz</h2>
+          <a className="link-quiet" href={href('/netz')}>
+            Vollbild <ArrowRight size={14} />
+          </a>
+        </div>
+        <KnowledgeGraph graph={model.graph} mode="preview" />
+      </section>
+
       <section className="contents">
         <div className="section-head">
           <h2>Inhaltsverzeichnis</h2>
@@ -229,15 +239,6 @@ export function Home() {
         </section>
       </div>
 
-      <section className="paper graph-card">
-        <div className="section-head">
-          <h2>Wissensnetz</h2>
-          <a className="link-quiet" href={href('/netz')}>
-            Vollbild <ArrowRight size={14} />
-          </a>
-        </div>
-        <KnowledgeGraph graph={model.graph} mode="preview" />
-      </section>
     </div>
   )
 }

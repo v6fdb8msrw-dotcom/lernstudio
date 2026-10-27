@@ -883,6 +883,16 @@
   padding-bottom: 16px;
 }
 
+.graph-card .graph-view {
+  height: 560px;
+}
+
+@media (max-width: 760px) {
+  .graph-card .graph-view {
+    height: 380px;
+  }
+}
+
 @media (max-width: 760px) {
   .graph-view {
     height: 340px;
