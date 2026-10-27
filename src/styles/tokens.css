@@ -1,95 +1,103 @@
 /*
- * Lernstudio – Designsystem: klares Weiß, feine Silberlinien, warmes Beige als Akzent.
- * Aufbau wie Muscle Studio (Startseite mit Kacheln, schlanke Leiste auf Unterseiten),
- * aber hell und ruhig. Dunkle Flächen gibt es nur für Haupt-Knöpfe.
+ * Lernstudio – Designsystem „Bibliothek“: warmes Papier-Beige, tiefe Tinte, Flaschengrün als Akzent,
+ * Garamond für Überschriften. Klassisch und ruhig wie ein gutes Notizbuch.
+ * Links eine feste Seitenleiste (am Handy unten eine Leiste), rechts die Seite.
  */
 
 :root {
   color-scheme: light;
 
-  /* Flächen */
-  --bg: #ffffff;
-  --bg-soft: #faf8f4;
-  --surface: #ffffff;
-  --surface-2: #f7f5f1;
-  --surface-3: #f0ece4;
+  /* Flächen: Papier */
+  --bg: #f3eee3;
+  --bg-soft: #ece5d6;
+  --surface: #fbf9f3;
+  --surface-2: #f5f0e5;
+  --surface-3: #ebe3d3;
 
   /* Beige */
-  --beige: #efe5d3;
-  --beige-soft: #f7f1e6;
-  --beige-deep: #c9ad7f;
-  --beige-ink: #8a6b3c;
+  --beige: #e6d9bf;
+  --beige-soft: #efe6d3;
+  --beige-deep: #b3925d;
+  --beige-ink: #7a5d31;
   /* Textmarker in Notizen */
-  --mark: #f3e3bd;
+  --mark: #f0dfb0;
 
-  /* Silber */
-  --silver-1: #f3f4f6;
-  --silver-2: #e3e6ea;
-  --silver-3: #c6cbd2;
-  --silver-4: #9aa1ab;
-  --silver-grad: linear-gradient(135deg, #f7f8fa 0%, #e4e7eb 45%, #f5f6f8 60%, #d9dde2 100%);
-  --silver-edge: linear-gradient(135deg, #c9ced5, #eef0f3 45%, #b8bec6);
+  /* Grün (Akzent) */
+  --green: #2f5d46;
+  --green-2: #3f7559;
+  --green-soft: #e1e9de;
+  --green-ink: #22473a;
 
-  /* Text */
-  --ink: #1d1f23;
-  --ink-2: #4a4f57;
-  --ink-3: #7c828b;
-  --ink-4: #a4a9b1;
+  /* Warme Grautöne (ehemals Silber) */
+  --silver-1: #efe9dd;
+  --silver-2: #e1d8c6;
+  --silver-3: #cbbea5;
+  --silver-4: #988d79;
+  --silver-grad: linear-gradient(160deg, #fdfbf6 0%, #f1ead9 100%);
+  --silver-edge: linear-gradient(160deg, #d9ccb2, #f2ecdf 50%, #cdbfa4);
+
+  /* Tinte */
+  --ink: #221f1a;
+  --ink-2: #4b453b;
+  --ink-3: #7a7262;
+  --ink-4: #a79e8c;
 
   /* Linien */
-  --line: #ebedf0;
-  --line-2: #dde0e5;
+  --line: #e4dccc;
+  --line-2: #d5cab4;
+  --rule: #c9b48a;
 
-  /* Dunkler Knopf */
-  --contrast: #22252a;
-  --contrast-hover: #34383f;
+  /* Haupt-Knopf: Flaschengrün */
+  --contrast: #2f5d46;
+  --contrast-hover: #3a6c53;
 
   /* Status */
-  --ok: #3f8a5f;
-  --warn: #b7791f;
-  --warn-soft: #fbf1e1;
-  --danger: #c2453d;
-  --danger-soft: #fbeceb;
+  --ok: #3f7559;
+  --warn: #a8701c;
+  --warn-soft: #f6ead2;
+  --danger: #a8443b;
+  --danger-soft: #f5e3df;
 
-  /* Fachfarben: gedeckt, damit es ruhig bleibt */
-  --c-gelb: #c9a646;
-  --c-blau: #5b84b1;
-  --c-gruen: #5f9473;
-  --c-orange: #cd7f4a;
-  --c-pink: #c46a8a;
-  --c-violett: #8571b5;
-  --c-petrol: #3f8e93;
-  --c-rot: #bd5a50;
+  /* Fachfarben: wie alte Buchrücken */
+  --c-gelb: #b8923a;
+  --c-blau: #3f5f86;
+  --c-gruen: #4a7a5c;
+  --c-orange: #b46a3c;
+  --c-pink: #a65770;
+  --c-violett: #6c5a96;
+  --c-petrol: #33747a;
+  --c-rot: #9c4038;
 
   /* Form */
-  --radius-xs: 6px;
-  --radius-sm: 10px;
-  --radius: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 26px;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
 
-  --shadow-1: 0 1px 2px rgba(29, 31, 35, 0.05);
-  --shadow-2: 0 8px 24px rgba(29, 31, 35, 0.07), 0 1px 2px rgba(29, 31, 35, 0.04);
-  --shadow-3: 0 24px 60px rgba(29, 31, 35, 0.16);
+  --shadow-1: 0 1px 2px rgba(60, 45, 20, 0.06);
+  --shadow-2: 0 10px 28px rgba(60, 45, 20, 0.08), 0 1px 2px rgba(60, 45, 20, 0.05);
+  --shadow-3: 0 28px 70px rgba(50, 36, 14, 0.2);
 
-  --font-sans: 'Manrope Variable', 'Manrope', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'Source Sans 3 Variable', 'Source Sans 3', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'EB Garamond Variable', 'EB Garamond', 'Iowan Old Style', Georgia, serif;
 
-  --content-max: 1180px;
-  --gutter: 32px;
+  --sidebar: 248px;
+  --content-max: 1120px;
+  --gutter: 40px;
 
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --dur-1: 140ms;
-  --dur-2: 240ms;
+  --dur-2: 260ms;
 }
 
 @media (max-width: 1080px) {
   :root {
-    --gutter: 24px;
+    --gutter: 28px;
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 860px) {
   :root {
     --gutter: 16px;
   }

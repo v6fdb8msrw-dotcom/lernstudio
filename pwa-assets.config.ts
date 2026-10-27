@@ -6,8 +6,8 @@ export default defineConfig({
   preset: {
     ...minimal2023Preset,
     transparent: { ...minimal2023Preset.transparent, favicons: [[48, 'favicon.ico']] },
-    maskable: { ...minimal2023Preset.maskable, padding: 0, resizeOptions: { background: '#f4efe6' } },
-    apple: { ...minimal2023Preset.apple, padding: 0, resizeOptions: { background: '#f4efe6' } },
+    maskable: { ...minimal2023Preset.maskable, padding: 0, resizeOptions: { background: '#f3eee3' } },
+    apple: { ...minimal2023Preset.apple, padding: 0, resizeOptions: { background: '#f3eee3' } },
   },
   images: ['public/logo.svg'],
 })

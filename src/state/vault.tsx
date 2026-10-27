@@ -39,6 +39,7 @@ export interface Vault {
 
 const EMPTY_MODEL = buildModel([], new Map())
 const TODOS = 'wiki/dashboard/todos.md'
+const DEV_VAULT: VaultConfig = { owner: 'local', repo: 'Uni', branch: 'main', token: 'local-preview', obsidianVault: 'Uni' }
 /** Wie oft die offene App bei GitHub nach Neuem schaut (ein kleiner Abruf, wenn sich nichts geändert hat). */
 const POLL_MS = 60_000
 
@@ -148,7 +149,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let alive = true
     void (async () => {
-      const cfg = await cache.config()
+      // Lokale Vorschau (npm run dev:vault): liest den Vault direkt vom Mac, nur lesend
+      const cfg = import.meta.env.VITE_DEV_VAULT ? DEV_VAULT : await cache.config()
       configRef.current = cfg
       if (!alive) return
       setConfig(cfg)

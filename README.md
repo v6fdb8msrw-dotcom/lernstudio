@@ -1,6 +1,6 @@
 # Lernstudio
 
-Die Web-App über deinem Uni-Vault: ein klares, helles Cockpit in Weiß, Silber und Beige für Studium und Klausuren. Aufgebaut wie Muscle Studio, aber für die Uni.
+Die Web-App über deinem Uni-Vault, gestaltet wie eine kleine Bibliothek: warmes Papier-Beige, Flaschengrün und Garamond-Überschriften. Links die Seitenleiste mit Bereichen und Fächern, auf der Startseite stehen deine Fächer als Bücher im Regal. Am Handy gibt es unten eine Tab-Leiste.
 
 Der Lernstudio ist das „Uni Hub“ für einen Vault nach dem [uni-knowledge-template](https://github.com/NicolasGypkens/uni-knowledge-template):
 
@@ -22,7 +22,7 @@ React · TypeScript · Vite · IndexedDB · installierbare PWA. Komplett kostenl
 | **Concept-Ansicht** | Obsidian-Markdown mit `[[Wikilinks]]`, eingebetteten Bildern, Callouts, aufklappbaren Selbsttest-Fragen, „Verlinkt von“, Knopf „In Obsidian öffnen“ und „Mit Claude besprechen“ (erklären, abfragen, zusammenfassen …). |
 | **Suche** | Volltext über alle Notes im Vault und die Namen deiner hochgeladenen Dateien. |
 | **Hochladen** | Viele Dateien auf einmal oder ganze Ordner (am Mac). Sie landen in `raw/<Semester>/<Fach>/<slides|notes|books|papers|videos>/`, alles in einem Commit. Danach steht der passende Befehl für Claude Code zum Kopieren bereit. YouTube-Links werden als `.txt` abgelegt. |
-| **Graph-Ansicht** | Die Graph-Ansicht aus Obsidian mittig auf der Startseite (und im Vollbild unter „Netz“): jede Notiz ein Knoten, jeder Link eine Linie. Filter, Farbgruppen, Kräfte, Knotengröße, Waisen und unaufgelöste Links kommen aus `.obsidian/graph.json`, also genau so, wie du sie in Obsidian einstellst. Notizen mit `node_size` im Frontmatter (z. B. die Fach-Seiten) werden groß gezeichnet, wenn das Vault-Plugin „Uni Hub Size“ aktiv ist. Ziehen, Zoomen (⌘ + Scrollen bzw. Pinch), Antippen öffnet die Notiz. |
+| **Wissensnetz** | Die Graph-Ansicht aus Obsidian auf der Startseite (und im Vollbild unter „Netz“): jede Notiz ein Knoten, jeder Link eine Linie. Filter, Farbgruppen, Kräfte, Knotengröße, Waisen und unaufgelöste Links kommen aus `.obsidian/graph.json`, also genau so, wie du sie in Obsidian einstellst. Notizen mit `node_size` im Frontmatter (z. B. die Fach-Seiten) werden groß gezeichnet, wenn das Vault-Plugin „Uni Hub Size“ aktiv ist. Ziehen, Zoomen (⌘ + Scrollen bzw. Pinch), Antippen öffnet die Notiz. |
 | **Mitschrift** | Schreiben wie in Notion, mit Überschriften, Listen, Markierungen und Fotos. Screenshots mit ⌘V, Fotos und Foliensätze (PDF, PowerPoint, Keynote) per Knopf oder Drag & Drop. **Speichert automatisch** (nach kurzer Tipp-Pause, spätestens alle 45 s und beim Verlassen) als Markdown in `raw/…/notes/`; Fotos landen in `raw/assets/`, Foliensätze sofort in `raw/…/slides/` und stehen als `![[…]]` in der Mitschrift. Gespeichert wird erst, wenn ein Fach gewählt ist und Text drinsteht (kein stilles Standard-Fach, keine leeren Dateien). Tippst du später ein anderes Fach an oder änderst den Titel einer neuen Mitschrift, zieht die Datei mit um. Notizen mit Kästen, Tabellen oder Formeln (z. B. aus Notion) bearbeitest du in Obsidian, die App zeigt sie nur an. |
 | **Todos** | Liest und schreibt `wiki/dashboard/todos.md`: abhaken und neue anlegen. Gelöscht wird nie etwas, und die Format-Kommentare für Claude bleiben stehen. |
 | **Claude** | Claude Chat öffnet claude.ai mit deiner Frage (optional mit den Begriffen eines Fachs als Kontext). Claude Code: alle Befehle aus `commands.md` zum Ausfüllen, Kopieren und Öffnen. |
@@ -108,6 +108,7 @@ Voraussetzung: Node.js 24 und npm.
 cd ~/lernstudio
 npm install
 npm run dev        # http://127.0.0.1:5174
+npm run dev:vault  # http://127.0.0.1:5180, liest den Vault direkt aus ~/Uni (nur lesen, kein Schlüssel nötig)
 ```
 
 | Befehl | Zweck |

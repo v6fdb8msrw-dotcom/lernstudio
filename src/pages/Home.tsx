@@ -1,15 +1,14 @@
-import { ArrowUpRight, BookA, Check, NotebookPen, Plus, Search, Settings2, Sparkles, Upload } from 'lucide-react'
+import { ArrowRight, Check, Plus, Search, Settings2 } from 'lucide-react'
 import { useMemo, useState, type CSSProperties } from 'react'
-import { BrandMark } from '../components/BrandMark'
 import { KnowledgeGraph } from '../components/KnowledgeGraph'
 import { useClock } from '../components/hooks'
-import { SyncBadge } from '../components/SyncBadge'
-import { ExamPill, Notice, StatusBar, SubjectBadge } from '../components/ui'
+import { ExamPill, Notice } from '../components/ui'
 import { useUi } from '../components/UiContext'
 import { examInfo, formatDateLong, formatDay, greeting, relativeTime } from '../lib/date'
 import { href, navigate } from '../state/router'
 import { useToast } from '../state/toast'
 import { useVault } from '../state/vault'
+import type { Subject } from '../types'
 import { readiness, statusCounts, todayToLearn } from '../vault/model'
 
 export function Home() {
@@ -40,105 +39,32 @@ export function Home() {
     toast('Erledigt')
   }
 
-  const tiles = [
-    { to: '/begriffe', icon: BookA, label: 'Begriffe', value: `${model.concepts.length} Concepts` },
-    { to: '/hochladen', icon: Upload, label: 'Hochladen', value: `${model.raw.length} Dateien im Vault` },
-    { to: '/mitschrift', icon: NotebookPen, label: 'Mitschrift', value: 'schreiben, mit Fotos' },
-    { to: '/suche', icon: Search, label: 'Suche', value: 'im ganzen Vault' },
-    { to: '/claude', icon: Sparkles, label: 'Claude', value: 'Chat & Claude Code' },
-    { to: '/todos', icon: Check, label: 'Todos', value: `${model.todos.filter((t) => !t.done).length} offen` },
-  ]
-
   return (
     <div className="page home">
       <section className="hero">
-        <header className="hero-top">
-          <a className="brand" href={href('/')}>
-            <span className="brand-mark">
-              <BrandMark size={24} />
-            </span>
-            <span>
-              <div className="brand-name">Lernstudio</div>
-              <div className="brand-sub">{sem ? `Semester ${sem.name}` : 'Uni-Vault'}</div>
-            </span>
-          </a>
-          <div className="hero-top-right">
-            <SyncBadge />
-            <a className="btn btn-icon" href={href('/einstellungen')} aria-label="Einstellungen">
-              <Settings2 size={18} />
-            </a>
-          </div>
-        </header>
-
-        <div className="hero-body">
-          <div className="hero-left">
-            <div className="eyebrow">{formatDateLong(clock)}</div>
-            <h1 className="hero-title">{greeting(clock.getHours())}.</h1>
-            <p className="hero-lead">
-              {shown.length} {shown.length === 1 ? 'Fach' : 'Fächer'} · {model.concepts.length} Concepts · {model.raw.length} Dateien
-              {todos.length ? ` · ${todos.length} offene Todos` : ''}
-            </p>
-            <form
-              className="hero-search"
-              onSubmit={(e) => {
-                e.preventDefault()
-                navigate(`/suche?q=${encodeURIComponent(q)}`)
-              }}
-            >
-              <Search size={18} />
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Begriff, Formel, Thema suchen …" aria-label="Im Vault suchen" />
-            </form>
-          </div>
-
-          <div className="hero-exam">
-            {next ? (
-              <a className="exam-card" href={href(`/fach/${next.s.slug}`)} style={{ '--c': next.s.color } as CSSProperties}>
-                <div className="eyebrow">Nächste Prüfung</div>
-                <div className="exam-count">
-                  <span className="display num">{next.e!.days}</span>
-                  <span>{next.e!.days === 1 ? 'Tag' : 'Tage'}</span>
-                </div>
-                <div className="exam-subject">{next.s.label}</div>
-                <div className="muted small">
-                  {next.s.assessment ?? 'Prüfung'} am {formatDay(next.s.examDate!)}
-                </div>
-                <ReadyRing value={readiness(statusCounts(model.concepts, next.s.slug))} />
-              </a>
-            ) : (
-              <div className="exam-card empty-exam">
-                <div className="eyebrow">Nächste Prüfung</div>
-                <p className="muted small">Noch kein Prüfungstermin eingetragen. Sobald einer feststeht, sag in Claude Code z. B. „Exam Mode für &lt;Fach&gt;“ oder trag ihn bei der Einrichtung ein.</p>
-              </div>
-            )}
-          </div>
+        <div className="hero-text">
+          <div className="eyebrow">{formatDateLong(clock)}</div>
+          <h1 className="hero-title">{greeting(clock.getHours())}.</h1>
+          <p className="hero-lead">
+            {shown.length} {shown.length === 1 ? 'Fach' : 'Fächer'} in diesem Semester, {model.concepts.length} Begriffe und {model.raw.length} Dateien in deinem Vault
+            {todos.length ? `, ${todos.length} offene ${todos.length === 1 ? 'Aufgabe' : 'Aufgaben'}` : ''}.
+          </p>
+          <form
+            className="hero-search"
+            onSubmit={(e) => {
+              e.preventDefault()
+              navigate(`/suche?q=${encodeURIComponent(q)}`)
+            }}
+          >
+            <Search size={18} />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Begriff, Formel, Thema nachschlagen …" aria-label="Im Vault suchen" />
+            <button type="submit" className="hero-search-go" aria-label="Suchen">
+              <ArrowRight size={17} />
+            </button>
+          </form>
         </div>
 
-        {semProgress !== undefined && sem && (
-          <div className="semester-bar" aria-label={`Semester zu ${Math.round(semProgress * 100)} % vorbei`}>
-            <div className="semester-track">
-              <span style={{ width: `${semProgress * 100}%` }} />
-            </div>
-            <div className="semester-caption">
-              <span>Semester {sem.name}</span>
-              <span className="num">{Math.round(semProgress * 100)} %</span>
-              {sem.firstExam && <span>Klausurphase ab {formatDay(sem.firstExam)}</span>}
-            </div>
-          </div>
-        )}
-
-        <nav className="tiles" aria-label="Bereiche">
-          {tiles.map((t, i) => (
-            <a key={t.to} className="tile" href={href(t.to)} style={{ '--i': i } as CSSProperties}>
-              <span className="tile-icon">
-                <t.icon size={18} strokeWidth={1.9} />
-              </span>
-              <span className="tile-text">
-                <b>{t.label}</b>
-                <span>{t.value}</span>
-              </span>
-            </a>
-          ))}
-        </nav>
+        <Bookshelf subjects={shown} />
       </section>
 
       {state === 'unconfigured' && (
@@ -154,52 +80,81 @@ export function Home() {
         </Notice>
       )}
 
-      <section className="card graph-card">
+      <div className="almanac">
+        <section className="almanac-card exam-card" style={next ? ({ '--c': next.s.color } as CSSProperties) : undefined}>
+          <div className="eyebrow">Nächste Prüfung</div>
+          {next ? (
+            <a className="exam-body" href={href(`/fach/${next.s.slug}`)}>
+              <span className="exam-days display num">{next.e!.days}</span>
+              <span>
+                <span className="exam-unit">{next.e!.days === 1 ? 'Tag bis' : 'Tage bis'}</span>
+                <span className="exam-subject">{next.s.label}</span>
+                <span className="muted small">
+                  {next.s.assessment ?? 'Prüfung'} am {formatDay(next.s.examDate!)} · {readiness(statusCounts(model.concepts, next.s.slug))} % gelernt
+                </span>
+              </span>
+            </a>
+          ) : (
+            <p className="muted small">Noch kein Prüfungstermin eingetragen. Sobald einer feststeht, sag in Claude Code z. B. „Exam Mode für &lt;Fach&gt;“.</p>
+          )}
+        </section>
+
+        {semProgress !== undefined && sem ? (
+          <section className="almanac-card">
+            <div className="eyebrow">Semester {sem.name}</div>
+            <div className="sem-figure">
+              <span className="display num">{Math.round(semProgress * 100)}</span>
+              <span className="muted">% vorbei</span>
+            </div>
+            <div className="semester-track" aria-hidden>
+              <span style={{ width: `${semProgress * 100}%` }} />
+            </div>
+            {sem.firstExam && <div className="muted small">Klausurphase ab {formatDay(sem.firstExam)}</div>}
+          </section>
+        ) : (
+          <section className="almanac-card">
+            <div className="eyebrow">Semester</div>
+            <p className="muted small">Start und Ende des Semesters stehen noch nicht im Dashboard.</p>
+          </section>
+        )}
+      </div>
+
+      <section className="contents">
         <div className="section-head">
-          <h2>Graph-Ansicht</h2>
-          <a className="muted small" href={href('/netz')}>
-            Vollbild
+          <h2>Inhaltsverzeichnis</h2>
+          <a className="link-quiet" href={href('/begriffe')}>
+            Alle Begriffe <ArrowRight size={14} />
           </a>
         </div>
-        <KnowledgeGraph graph={model.graph} mode="preview" />
-      </section>
-
-      <section>
-        <div className="section-head">
-          <h2>Fächer</h2>
-          <span className="muted small">{shown.length}</span>
-        </div>
         {shown.length ? (
-          <div className="subject-grid">
-            {shown.map((s) => {
+          <ol className="toc">
+            {shown.map((s, i) => {
               const counts = statusCounts(model.concepts, s.slug)
               const files = model.raw.filter((r) => r.subject === s.slug).length
               return (
-                <a key={s.slug} className="subject-card" href={href(`/fach/${s.slug}`)} style={{ '--c': s.color } as CSSProperties}>
-                  <div className="subject-card-top">
-                    <SubjectBadge label={s.label} short={s.short} color={s.color} />
+                <li key={s.slug} style={{ '--c': s.color } as CSSProperties}>
+                  <a href={href(`/fach/${s.slug}`)}>
+                    <span className="toc-num display">{toRoman(i + 1)}</span>
+                    <span className="toc-title">
+                      <span className="display">{s.label}</span>
+                      <span className="muted small">
+                        {counts.total} {counts.total === 1 ? 'Begriff' : 'Begriffe'} · {files} {files === 1 ? 'Datei' : 'Dateien'} · {readiness(counts)} % gelernt
+                      </span>
+                    </span>
+                    <span className="toc-leader" aria-hidden />
                     <ExamPill date={s.examDate} />
-                  </div>
-                  <div>
-                    <h3>{s.label}</h3>
-                    <div className="muted small">
-                      {counts.total} Concepts · {readiness(counts)} % fertig · {files} Dateien
-                    </div>
-                  </div>
-                  <StatusBar counts={counts} />
-                </a>
+                  </a>
+                </li>
               )
             })}
-          </div>
+          </ol>
         ) : (
-          <div className="card empty-card">
-            <p className="muted">{state === 'unconfigured' ? 'Verbinde zuerst deinen Vault.' : state === 'loading' || state === 'syncing' ? 'Lade deinen Vault …' : 'Noch keine Fächer im Vault.'}</p>
-          </div>
+          <p className="muted">{state === 'unconfigured' ? 'Verbinde zuerst deinen Vault.' : state === 'loading' || state === 'syncing' ? 'Lade deinen Vault …' : 'Noch keine Fächer im Vault.'}</p>
         )}
       </section>
 
       <div className="home-columns">
-        <section className="card">
+        <section className="paper">
           <div className="section-head">
             <h2>Heute lernen</h2>
             <span className="muted small">wartet auf Mitschrift</span>
@@ -213,17 +168,17 @@ export function Home() {
                       <b>{c.title}</b>
                       <span className="muted small">{c.oneLiner}</span>
                     </span>
-                    <ArrowUpRight size={15} className="muted" />
+                    <ArrowRight size={15} className="muted" />
                   </a>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="muted small">Nichts offen. Neue Folien hochladen oder eine Mitschrift schreiben, dann kommt hier, was Claude noch anreichern muss.</p>
+            <p className="muted small">Nichts offen. Neue Folien hochladen oder eine Mitschrift schreiben, dann steht hier, was Claude noch anreichern muss.</p>
           )}
         </section>
 
-        <section className="card">
+        <section className="paper">
           <div className="section-head">
             <h2>Todos</h2>
             <button type="button" className="btn btn-sm btn-ghost" onClick={openTodo}>
@@ -239,9 +194,7 @@ export function Home() {
                   </button>
                   <span className="grow">
                     <b>{t.title}</b>
-                    <span className="muted small">
-                      {[t.date ? formatDay(t.date) : undefined, t.category].filter(Boolean).join(' · ')}
-                    </span>
+                    <span className="muted small">{[t.date ? formatDay(t.date) : undefined, t.category].filter(Boolean).join(' · ')}</span>
                   </span>
                   {t.priority === 'high' && <span className="pill pill-now">wichtig</span>}
                 </li>
@@ -252,7 +205,7 @@ export function Home() {
           )}
         </section>
 
-        <section className="card">
+        <section className="paper">
           <div className="section-head">
             <h2>Zuletzt verarbeitet</h2>
             <span className="muted small">aus log.md</span>
@@ -275,21 +228,61 @@ export function Home() {
           )}
         </section>
       </div>
+
+      <section className="paper graph-card">
+        <div className="section-head">
+          <h2>Wissensnetz</h2>
+          <a className="link-quiet" href={href('/netz')}>
+            Vollbild <ArrowRight size={14} />
+          </a>
+        </div>
+        <KnowledgeGraph graph={model.graph} mode="preview" />
+      </section>
     </div>
   )
 }
 
-function ReadyRing({ value }: { value: number }) {
-  const r = 22
-  const c = 2 * Math.PI * r
+/** Neutrale Bücher, die das Regal füllen (nicht anklickbar). */
+const FILLER = [
+  { c: '#d8c8a6', w: 30, h: 72 },
+  { c: '#8a7a5c', w: 24, h: 80 },
+  { c: '#ece2cc', w: 36, h: 66 },
+]
+
+/** Die Fächer als Buchrücken im Regal. Höhe und Breite variieren leicht, ein Klick öffnet das Fach. */
+function Bookshelf({ subjects }: { subjects: Subject[] }) {
   return (
-    <div className="ready-ring" aria-label={`${value} % der Concepts fertig`}>
-      <svg width="56" height="56" viewBox="0 0 56 56">
-        <circle cx="28" cy="28" r={r} fill="none" className="ring-track" strokeWidth="5" />
-        <circle cx="28" cy="28" r={r} fill="none" className="ring-value" strokeWidth="5" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - value / 100)} transform="rotate(-90 28 28)" />
-      </svg>
-      <span className="num">{value}%</span>
-      <small>fertig</small>
+    <div className="shelf" aria-label="Deine Fächer">
+      <div className="shelf-books">
+        {FILLER.slice(0, 2).map((f, i) => (
+          <span key={`a${i}`} className="book book-plain" style={{ '--spine': f.c, '--w': `${f.w}px`, '--h': `${f.h}%`, '--i': i } as CSSProperties} aria-hidden />
+        ))}
+        {subjects.map((s, i) => {
+          const style = { '--c': s.color, '--h': `${86 + ((i * 37) % 14)}%`, '--w': `${62 + ((i * 23) % 12)}px`, '--i': i + 2, '--fs': s.label.length > 18 ? '15px' : s.label.length > 13 ? '17px' : '19px' } as CSSProperties
+          return (
+            <a key={s.slug} className="book" href={href(`/fach/${s.slug}`)} style={style} title={`${s.label} öffnen`}>
+              <span className="book-band" />
+              <span className="book-title">{s.label}</span>
+              <span className="book-foot num">{s.short}</span>
+            </a>
+          )
+        })}
+        <span className="book book-plain book-lean" style={{ '--spine': FILLER[2].c, '--w': `${FILLER[2].w}px`, '--h': `${FILLER[2].h}%`, '--i': subjects.length + 2 } as CSSProperties} aria-hidden />
+        <span className="book-end" aria-hidden />
+      </div>
+      <div className="shelf-board" aria-hidden />
     </div>
   )
+}
+
+function toRoman(n: number): string {
+  const map: [number, string][] = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]
+  let out = ''
+  for (const [v, r] of map) {
+    while (n >= v) {
+      out += r
+      n -= v
+    }
+  }
+  return out
 }

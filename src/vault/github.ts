@@ -6,7 +6,7 @@ import type { TreeEntry, VaultConfig } from '../types'
  * damit viele Dateien in einem einzigen Commit landen.
  */
 
-const API = 'https://api.github.com'
+const API = import.meta.env.VITE_DEV_VAULT ? '/__vault' : 'https://api.github.com'
 
 export class GitHubError extends Error {
   status: number

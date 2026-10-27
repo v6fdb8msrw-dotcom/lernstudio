@@ -54,7 +54,7 @@
 @media (max-width: 760px) {
   .card {
     padding: 16px;
-    border-radius: 18px;
+    border-radius: 12px;
   }
 }
 
@@ -85,7 +85,7 @@
   gap: 8px;
   min-height: 40px;
   padding: 0 16px;
-  border-radius: 12px;
+  border-radius: 9px;
   border: 1px solid var(--line-2);
   background: var(--surface);
   color: var(--ink);
@@ -115,7 +115,7 @@
 .btn-dark {
   background: var(--contrast);
   border-color: var(--contrast);
-  color: #fff;
+  color: #f6f1e6;
 }
 
 .btn-primary:hover,
@@ -144,20 +144,20 @@
 .btn-danger.solid {
   background: var(--danger);
   border-color: var(--danger);
-  color: #fff;
+  color: #f6f1e6;
 }
 
 .btn-sm {
   min-height: 32px;
   padding: 0 11px;
-  border-radius: 10px;
+  border-radius: 8px;
   font-size: 13px;
 }
 
 .btn-lg {
   min-height: 52px;
   padding: 0 24px;
-  border-radius: 15px;
+  border-radius: 9px;
   font-size: 15px;
 }
 
@@ -165,13 +165,13 @@
   width: 38px;
   min-height: 38px;
   padding: 0;
-  border-radius: 11px;
+  border-radius: 8px;
 }
 
 .btn-icon.sm {
   width: 30px;
   min-height: 30px;
-  border-radius: 9px;
+  border-radius: 8px;
 }
 
 .link-btn {
@@ -227,7 +227,7 @@ kbd {
   width: 100%;
   min-height: 44px;
   padding: 0 14px;
-  border-radius: 12px;
+  border-radius: 9px;
   border: 1px solid var(--line-2);
   background: var(--surface);
   font-size: 15px;
@@ -267,7 +267,7 @@ kbd {
 .seg {
   display: inline-flex;
   padding: 3px;
-  border-radius: 12px;
+  border-radius: 9px;
   background: var(--surface-2);
   border: 1px solid var(--line);
   gap: 2px;
@@ -281,7 +281,7 @@ kbd {
   border: 0;
   background: none;
   padding: 7px 12px;
-  border-radius: 9px;
+  border-radius: 8px;
   font-size: 13px;
   font-weight: 650;
   color: var(--ink-3);
@@ -417,7 +417,7 @@ kbd {
 .subject-badge {
   display: grid;
   place-items: center;
-  border-radius: 13px;
+  border-radius: 9px;
   flex: none;
   font-family: var(--font-display);
   font-size: 18px;
@@ -466,14 +466,14 @@ kbd {
 }
 
 .status-enriched {
-  color: #4f7a9e;
+  color: #4c6a80;
   background: #eef4f9;
   border-color: #d6e3ee;
 }
 
 .status-exam-ready {
   color: var(--ok);
-  background: #edf6f0;
+  background: var(--green-soft);
   border-color: #d2e8da;
 }
 
@@ -498,15 +498,15 @@ kbd {
 }
 
 .sb-exam-ready {
-  background: #6aa883;
+  background: var(--green-2);
 }
 
 .sb-enriched {
-  background: #8fb3d1;
+  background: #8aa3b4;
 }
 
 .sb-pending_enrichment {
-  background: #e2b56a;
+  background: #d1a356;
 }
 
 .sb-draft {
@@ -564,7 +564,7 @@ kbd {
   align-items: center;
   gap: 12px;
   padding: 11px 10px;
-  border-radius: 12px;
+  border-radius: 9px;
   text-decoration: none;
   color: inherit;
   min-width: 0;
@@ -576,8 +576,8 @@ a.list-row:hover {
 
 .list-row b {
   display: block;
-  font-weight: 650;
-  font-size: 14.5px;
+  font-weight: 600;
+  font-size: 15.5px;
 }
 
 .list-row .muted.small {
@@ -625,7 +625,7 @@ a.list-row:hover {
   place-items: center;
   width: 36px;
   height: 36px;
-  border-radius: 11px;
+  border-radius: 8px;
   background: var(--surface-2);
   border: 1px solid var(--line);
   color: var(--ink-2);
@@ -650,7 +650,7 @@ a.list-row:hover {
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgba(29, 31, 35, 0.28);
+  background: rgba(40, 30, 15, 0.32);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   animation: fade-in var(--dur-2) var(--ease) both;
@@ -727,7 +727,7 @@ a.list-row:hover {
   align-items: flex-start;
   gap: 4px;
   padding: 16px;
-  border-radius: 16px;
+  border-radius: 12px;
   border: 1px solid var(--line-2);
   background: var(--surface);
   text-align: left;
@@ -776,9 +776,9 @@ a.list-row:hover {
   align-items: center;
   gap: 10px;
   padding: 11px 16px;
-  border-radius: 14px;
+  border-radius: 9px;
   background: var(--contrast);
-  color: #fff;
+  color: #f6f1e6;
   font-size: 14px;
   font-weight: 600;
   box-shadow: var(--shadow-3);
@@ -967,7 +967,7 @@ a.list-row:hover {
   gap: 7px;
   min-height: 34px;
   padding: 0 11px;
-  border-radius: 11px;
+  border-radius: 8px;
   border: 1px solid var(--line-2);
   background: var(--surface);
   font-size: 12.5px;
@@ -997,7 +997,7 @@ a.list-row:hover {
 .command {
   display: block;
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--bg-soft);
   border: 1px solid var(--line-2);
   font: 600 13px ui-monospace, 'SF Mono', Menlo, monospace;
@@ -1084,7 +1084,7 @@ a.list-row:hover {
   background: var(--surface-2);
   border: 1px solid var(--line);
   padding: 12px 14px;
-  border-radius: 12px;
+  border-radius: 9px;
   overflow-x: auto;
 }
 
@@ -1120,7 +1120,7 @@ a.list-row:hover {
   display: block;
   max-width: 100%;
   height: auto;
-  border-radius: 12px;
+  border-radius: 9px;
   border: 1px solid var(--line);
   margin: 8px 0;
 }
@@ -1179,7 +1179,7 @@ a.list-row:hover {
   max-width: 100%;
   padding: 8px 12px;
   margin: 4px 0;
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid var(--line-2);
   background: var(--beige-soft);
   color: var(--ink);
@@ -1205,7 +1205,7 @@ a.list-row:hover {
 .embed-missing {
   display: block;
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px dashed var(--silver-3);
   color: var(--ink-3);
   font-size: 13px;
@@ -1215,7 +1215,7 @@ a.list-row:hover {
 /* Callouts (> [!tip], > [!question]- …) */
 .callout {
   margin: 0 0 1em;
-  border-radius: 14px;
+  border-radius: 9px;
   border: 1px solid var(--line-2);
   background: var(--bg-soft);
   overflow: hidden;
@@ -1310,9 +1310,9 @@ details[open] > summary.callout-title::after {
   flex-wrap: wrap;
   gap: 2px;
   padding: 5px;
-  border-radius: 13px;
+  border-radius: 9px;
   border: 1px solid var(--line-2);
-  background: rgba(255, 255, 255, 0.92);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -1322,7 +1322,7 @@ details[open] > summary.callout-title::after {
   height: 34px;
   padding: 0 9px;
   border: 0;
-  border-radius: 9px;
+  border-radius: 8px;
   background: none;
   color: var(--ink-2);
   font-weight: 700;

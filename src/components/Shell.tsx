@@ -1,64 +1,123 @@
-import { ArrowLeft, BookA, Plus, RefreshCw, Search, Settings2, Sparkles, Upload, Waypoints } from 'lucide-react'
-import { useEffect, useRef, type ReactNode } from 'react'
+import { BookA, Home, Library, NotebookPen, Plus, RefreshCw, Search, Settings2, Sparkles, SquareCheck, Upload, Waypoints } from 'lucide-react'
+import type { CSSProperties, ReactNode } from 'react'
 import { href, type Route } from '../state/router'
+import { useVault } from '../state/vault'
 import { BrandMark } from './BrandMark'
 import { SyncBadge } from './SyncBadge'
 import { useUi } from './UiContext'
 
 const NAV = [
+  { path: '/', label: 'Übersicht', icon: Home },
   { path: '/begriffe', label: 'Begriffe', icon: BookA },
-  { path: '/netz', label: 'Netz', icon: Waypoints },
   { path: '/suche', label: 'Suche', icon: Search },
+  { path: '/netz', label: 'Wissensnetz', icon: Waypoints },
+]
+
+const WORK = [
+  { path: '/mitschrift', label: 'Mitschrift', icon: NotebookPen },
   { path: '/hochladen', label: 'Hochladen', icon: Upload },
+  { path: '/todos', label: 'Todos', icon: SquareCheck },
   { path: '/claude', label: 'Claude', icon: Sparkles },
 ]
 
+/** Unten am Handy: die fünf wichtigsten Ziele. */
+const TABS = [
+  { path: '/', label: 'Übersicht', icon: Home },
+  { path: '/begriffe', label: 'Begriffe', icon: BookA },
+  { path: '/suche', label: 'Suche', icon: Search },
+  { path: '/todos', label: 'Todos', icon: SquareCheck },
+  { path: '/claude', label: 'Claude', icon: Sparkles },
+]
+
+function isActive(route: Route, path: string): boolean {
+  return path === '/' ? route.segments.length === 0 : route.path.startsWith(path)
+}
+
 /**
- * App-Rahmen wie bei Muscle Studio: Die Startseite ist die Übersicht mit großen Feldern.
- * Unterseiten bekommen eine schlanke Leiste mit „Übersicht“, den Bereichen und den Einstellungen.
+ * App-Rahmen wie eine Bibliothek: links die Seitenleiste mit Bereichen und Fächern (Buchrücken),
+ * am Handy oben eine schmale Kopfzeile und unten die Tab-Leiste.
  */
 export function Shell({ route, children, updateReady, onUpdate }: { route: Route; children: ReactNode; updateReady: boolean; onUpdate: () => void }) {
   const { openQuick } = useUi()
-  const isHome = route.segments.length === 0
-  const navRef = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    const nav = navRef.current
-    const active = nav?.querySelector<HTMLElement>('[aria-current="page"]')
-    if (nav && active) nav.scrollLeft = active.offsetLeft - nav.clientWidth / 2 + active.clientWidth / 2
-  }, [route.path])
+  const { model } = useVault()
+  const subjects = model.subjects.filter((s) => s.active && !s.slug.startsWith('beispiel-fach'))
+  const sem = model.semester
+  const hideFab = route.segments[0] === 'einstellungen' || route.segments[0] === 'mitschrift'
 
   return (
-    <div className={`app ${isHome ? 'is-home' : ''}`}>
-      {!isHome && (
-        <header className="appbar">
-          <div className="appbar-row">
-            <a className="appbar-back" href={href('/')} aria-label="Zur Übersicht">
-              <ArrowLeft size={18} />
-              <span className="brand-mark sm">
-                <BrandMark size={17} />
-              </span>
-              <span className="appbar-label">Übersicht</span>
+    <div className="app">
+      <aside className="sidebar" aria-label="Navigation">
+        <a className="brand" href={href('/')}>
+          <span className="brand-mark">
+            <BrandMark size={26} />
+          </span>
+          <span>
+            <span className="brand-name">Lernstudio</span>
+            <span className="brand-sub">{sem ? `Semester ${sem.name}` : 'Uni-Vault'}</span>
+          </span>
+        </a>
+
+        <nav className="side-nav">
+          {NAV.map((it) => (
+            <a key={it.path} href={href(it.path)} aria-current={isActive(route, it.path) ? 'page' : undefined}>
+              <it.icon size={17} strokeWidth={1.7} />
+              {it.label}
             </a>
-            <nav className="area-nav" aria-label="Bereiche" ref={navRef}>
-              {NAV.map((it) => (
-                <a key={it.path} href={href(it.path)} aria-current={route.path.startsWith(it.path) ? 'page' : undefined}>
-                  <it.icon size={15} strokeWidth={1.9} />
-                  {it.label}
+          ))}
+        </nav>
+
+        {subjects.length > 0 && (
+          <div className="side-group">
+            <div className="side-label">
+              <Library size={13} /> Fächer
+            </div>
+            <nav className="side-subjects">
+              {subjects.map((s) => (
+                <a key={s.slug} href={href(`/fach/${s.slug}`)} style={{ '--c': s.color } as CSSProperties} aria-current={route.path.startsWith(`/fach/${s.slug}`) ? 'page' : undefined}>
+                  <span className="spine-dot" />
+                  {s.label}
                 </a>
               ))}
             </nav>
-            <div className="appbar-actions">
-              <SyncBadge compact />
-              <a className="btn btn-icon" href={href('/einstellungen')} aria-label="Einstellungen" aria-current={route.segments[0] === 'einstellungen' ? 'page' : undefined}>
-                <Settings2 size={18} />
-              </a>
-            </div>
           </div>
-        </header>
-      )}
+        )}
 
-      <main className={isHome ? 'main main-home' : 'main'}>
+        <div className="side-group">
+          <div className="side-label">Arbeiten</div>
+          <nav className="side-nav">
+            {WORK.map((it) => (
+              <a key={it.path} href={href(it.path)} aria-current={isActive(route, it.path) ? 'page' : undefined}>
+                <it.icon size={17} strokeWidth={1.7} />
+                {it.label}
+              </a>
+            ))}
+          </nav>
+        </div>
+
+        <div className="side-foot">
+          <SyncBadge />
+          <a className="side-settings" href={href('/einstellungen')} aria-current={route.segments[0] === 'einstellungen' ? 'page' : undefined}>
+            <Settings2 size={16} strokeWidth={1.7} /> Einstellungen
+          </a>
+        </div>
+      </aside>
+
+      <header className="topbar">
+        <a className="brand" href={href('/')}>
+          <span className="brand-mark sm">
+            <BrandMark size={20} />
+          </span>
+          <span className="brand-name">Lernstudio</span>
+        </a>
+        <div className="topbar-actions">
+          <SyncBadge compact />
+          <a className="btn btn-icon" href={href('/einstellungen')} aria-label="Einstellungen">
+            <Settings2 size={18} />
+          </a>
+        </div>
+      </header>
+
+      <main className="main">
         {updateReady && (
           <div className="notice beige update-banner">
             <RefreshCw size={17} />
@@ -71,9 +130,18 @@ export function Shell({ route, children, updateReady, onUpdate }: { route: Route
         <div key={route.path}>{children}</div>
       </main>
 
-      {route.segments[0] !== 'einstellungen' && route.segments[0] !== 'mitschrift' && (
+      <nav className="tabbar" aria-label="Bereiche">
+        {TABS.map((it) => (
+          <a key={it.path} href={href(it.path)} aria-current={isActive(route, it.path) ? 'page' : undefined}>
+            <it.icon size={20} strokeWidth={1.7} />
+            <span>{it.label}</span>
+          </a>
+        ))}
+      </nav>
+
+      {!hideFab && (
         <button type="button" className="fab" onClick={openQuick} aria-label="Neu: Hochladen, Mitschrift, Todo">
-          <Plus size={26} strokeWidth={2.2} />
+          <Plus size={24} strokeWidth={2} />
         </button>
       )}
     </div>

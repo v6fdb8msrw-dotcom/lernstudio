@@ -2,6 +2,7 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { devVault } from './tools/dev-vault.ts'
 
 // Für GitHub Pages läuft die App unter /<repository>/. Der Workflow setzt VITE_BASE entsprechend.
 const base = process.env.VITE_BASE ?? '/'
@@ -10,6 +11,7 @@ export default defineConfig({
   base,
   plugins: [
     react(),
+    ...(process.env.VITE_DEV_VAULT ? [devVault(process.env.VITE_DEV_VAULT)] : []),
     VitePWA({
       registerType: 'prompt',
       injectRegister: false,
@@ -25,8 +27,8 @@ export default defineConfig({
         scope: base,
         display: 'standalone',
         orientation: 'any',
-        background_color: '#ffffff',
-        theme_color: '#ffffff',
+        background_color: '#f3eee3',
+        theme_color: '#f3eee3',
         categories: ['education', 'productivity'],
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
